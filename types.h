@@ -170,7 +170,7 @@ typedef struct {
 void initBoard();
 void initPlayers(Square squares[40]);
 void gameLoop(currentPlayer players[4],Square squares[40]);
-void diceRoll(currentPlayer players[4],Square squares[40]);
+void diceRoll(currentPlayer players[4],Square squares[40],Order order[4]);
 char* getPlayer(currentPlayer player);
 
 #endif

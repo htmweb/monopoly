@@ -109,9 +109,7 @@ void setDiceVal(currentPlayer *player, Square squares[40]){
     }
 }
 
-void diceRoll(currentPlayer players[4], Square squares[40]){
-   
-    Order order[4];
+void diceRoll(currentPlayer players[4], Square squares[40], Order order[4]){
 
     for(int i = 0; i<4; i++){
         setDiceVal(&players[i], squares);

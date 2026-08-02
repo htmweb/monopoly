@@ -151,6 +151,7 @@ typedef struct {
     Loan ownedLoans[22];
     Insurance ownedInsurance[22];
     Player player;
+    int lastPosition;
     int position;
     int money;
     int lastTurnVal;
@@ -170,7 +171,14 @@ typedef struct {
 void initBoard();
 void initPlayers(Square squares[40]);
 void gameLoop(currentPlayer players[4],Square squares[40]);
-void diceRoll(currentPlayer players[4],Square squares[40],Order order[4]);
+void diceRoll(currentPlayer *player, Square squares[40]);
+void setOrder(currentPlayer players[4],Square squares[40]);
 char* getPlayer(currentPlayer player);
+void rollAndMove(currentPlayer players[4], Square squares[40]);
+void playerActivities(currentPlayer *player,Square squares[40]);
 
+void aggressiveInvestor(Square sqaures[40]);
+void conservativeBanker(Square sqaures[40]);
+void riskTaker(Square sqaures[40]);
+void oppurtunisticTrader(Square sqaures[40]);
 #endif

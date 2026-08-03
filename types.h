@@ -1,6 +1,7 @@
 #ifndef types_H
 #define types_H
 
+
 typedef enum {
     START,
     PROPERTY,
@@ -167,6 +168,17 @@ typedef struct {
     char color[10];
 }propertyGroup;
 
+typedef struct {
+    Square square;
+    int AGGRESSIVE_INVESTOR_BID;
+    int CONSERVATIVE_BANKER_BID;
+    int RISK_TAKER_BID;
+    int OPPORTUNISTIC_TRADER_BID;
+    int currentBid;
+    Player lastBidder;
+    int status;
+}Auction;
+
 
 void initBoard();
 void initPlayers(Square squares[40]);
@@ -181,4 +193,10 @@ void aggressiveInvestor(Square sqaures[40], currentPlayer *current_player);
 void conservativeBanker(Square sqaures[40],currentPlayer *current_player);
 void riskTaker(Square sqaures[40], currentPlayer *current_player);
 void oppurtunisticTrader(Square sqaures[40], currentPlayer *current_player);
+
+void startAuction(Square *square, currentPlayer players[4]);
+void AGG_BIDDING(Auction *auction, currentPlayer *player);
+void CON_BIDDING(Auction *auction, currentPlayer *player);
+void RISK_BIDDING(Auction *auction, currentPlayer *player);
+void OPP_BIDDING(Auction *auction, currentPlayer *player);
 #endif

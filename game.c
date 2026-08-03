@@ -114,11 +114,80 @@ void setOrder(currentPlayer players[4], Square squares[40]){
     }
 
 
+void startAuction(Square *square, currentPlayer players[4]){
+    printf("\n Auction Started.\n\n");
+    printf("Property :\n");
+    printf("%s\n\n", square->data.property.name);
+    printf("Opening Bid : \n");
+    printf("LKR %d\n\n", square->data.property.purchasePrice);
+
+    Auction auction;
+
+    auction.square = *square;
+    auction.AGGRESSIVE_INVESTOR_BID = auction.square.data.property.purchasePrice;
+    auction.CONSERVATIVE_BANKER_BID = auction.square.data.property.purchasePrice;
+    auction.RISK_TAKER_BID = -1;//auction.square.data.property.purchasePrice;
+    auction.OPPORTUNISTIC_TRADER_BID = -1;//auction.square.data.property.purchasePrice;
+    auction.currentBid = auction.square.data.property.purchasePrice;
+    auction.status = 1;
+    
+    while(auction.status == 1){
+    for(int i = 0; i<4; i++){
+        switch(players[i].player){
+            case AGGRESSIVE_INVESTOR:
+                if(auction.AGGRESSIVE_INVESTOR_BID != -1){
+                    AGG_BIDDING(&auction, &players[i]);
+                }
+                break;
+            case CONSERVATIVE_BANKER:
+                if(auction.CONSERVATIVE_BANKER_BID != -1){
+                    CON_BIDDING(&auction, &players[i]);
+                }
+                break;
+            case RISK_TAKER:
+                if(auction.RISK_TAKER_BID != -1){
+                    RISK_BIDDING(&auction, &players[i]);
+                }
+                break;
+            case OPPORTUNISTIC_TRADER:
+                if(auction.OPPORTUNISTIC_TRADER_BID != -1){
+                    OPP_BIDDING(&auction, &players[i]);
+                }
+                break;
+        }
+
+    }
+        
+        if(auction.AGGRESSIVE_INVESTOR_BID == -1 && auction.CONSERVATIVE_BANKER_BID == -1 && auction.RISK_TAKER_BID == -1 && auction.OPPORTUNISTIC_TRADER_BID == -1){
+            printf("Auction Ended.\n");
+            printf("No Bids were placed.\n");
+            auction.status = 0;
+        }
+        else if(auction.status == 0){
+            square->data.property.owner = auction.lastBidder;
+            printf("%s won the auction for %s with a bid of LKR %d.\n", getPlayer(players[auction.lastBidder]), square->data.property.name, auction.currentBid);
+            printf("Auction Ended.\n");
+            
+        }
+
+    }
+
+}
 
 void gameLoop(currentPlayer players[4],Square squares[40]){
     setOrder(players, squares);
 
     //check order before roll and move
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
     rollAndMove(players,squares);
     rollAndMove(players,squares);
     rollAndMove(players,squares);

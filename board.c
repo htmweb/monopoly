@@ -12,9 +12,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 60,
+                .purchasePrice = 1500,
                 .mortgageValue = 30,
-                .baseRental = 2,
+                .baseRental = 100,
                 .houseConstructionCost = 50,
                 .hotelConstructionCost = 100,
                 .mortgageStatus = UNMORTGAGED,
@@ -41,9 +41,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 60,
+                .purchasePrice = 1800,
                 .mortgageValue = 30,
-                .baseRental = 4,
+                .baseRental = 120,
                 .houseConstructionCost = 50,
                 .hotelConstructionCost = 100,
                 .mortgageStatus = UNMORTGAGED,
@@ -82,9 +82,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 100,
+                .purchasePrice = 2500,
                 .mortgageValue = 50,
-                .baseRental = 6,
+                .baseRental = 180,
                 .houseConstructionCost = 50,
                 .hotelConstructionCost = 100,
                 .mortgageStatus = UNMORTGAGED,
@@ -111,9 +111,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 100,
+                .purchasePrice = 2700,
                 .mortgageValue = 50,
-                .baseRental = 6,
+                .baseRental = 200,
                 .houseConstructionCost = 50,
                 .hotelConstructionCost = 100,
                 .mortgageStatus = UNMORTGAGED,
@@ -130,9 +130,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 120,
+                .purchasePrice = 3000,
                 .mortgageValue = 60,
-                .baseRental = 8,
+                .baseRental = 220,
                 .houseConstructionCost = 50,
                 .hotelConstructionCost = 100,
                 .mortgageStatus = UNMORTGAGED,
@@ -159,9 +159,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 140,
+                .purchasePrice = 3500,
                 .mortgageValue = 70,
-                .baseRental = 10,
+                .baseRental = 260,
                 .houseConstructionCost = 100,
                 .hotelConstructionCost = 150,
                 .mortgageStatus = UNMORTGAGED,
@@ -190,9 +190,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 140,
+                .purchasePrice = 3800,
                 .mortgageValue = 70,
-                .baseRental = 10,
+                .baseRental = 280,
                 .houseConstructionCost = 100,
                 .hotelConstructionCost = 150,
                 .mortgageStatus = UNMORTGAGED,
@@ -209,9 +209,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 160,
+                .purchasePrice = 4000,
                 .mortgageValue = 80,
-                .baseRental = 12,
+                .baseRental = 300,
                 .houseConstructionCost = 100,
                 .hotelConstructionCost = 150,
                 .mortgageStatus = UNMORTGAGED,
@@ -241,9 +241,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 180,
+                .purchasePrice = 4500,
                 .mortgageValue = 90,
-                .baseRental = 14,
+                .baseRental = 350,
                 .houseConstructionCost = 100,
                 .hotelConstructionCost = 150,
                 .mortgageStatus = UNMORTGAGED,
@@ -273,9 +273,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 180,
+                .purchasePrice = 4700,
                 .mortgageValue = 90,
-                .baseRental = 14,
+                .baseRental = 370,
                 .houseConstructionCost = 100,
                 .hotelConstructionCost = 150,
                 .mortgageStatus = UNMORTGAGED,
@@ -292,9 +292,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 200,
+                .purchasePrice = 5000,
                 .mortgageValue = 100,
-                .baseRental = 16,
+                .baseRental = 400,
                 .houseConstructionCost = 100,
                 .hotelConstructionCost = 150,
                 .mortgageStatus = UNMORTGAGED,
@@ -321,9 +321,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 220,
+                .purchasePrice = 5500,
                 .mortgageValue = 110,
-                .baseRental = 18,
+                .baseRental = 450,
                 .houseConstructionCost = 150,
                 .hotelConstructionCost = 200,
                 .mortgageStatus = UNMORTGAGED,
@@ -350,9 +350,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 220,
+                .purchasePrice = 5800,
                 .mortgageValue = 110,
-                .baseRental = 18,
+                .baseRental = 480,
                 .houseConstructionCost = 150,
                 .hotelConstructionCost = 200,
                 .mortgageStatus = UNMORTGAGED,
@@ -369,9 +369,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 240,
+                .purchasePrice = 6000,
                 .mortgageValue = 120,
-                .baseRental = 20,
+                .baseRental = 500,
                 .houseConstructionCost = 150,
                 .hotelConstructionCost = 200,
                 .mortgageStatus = UNMORTGAGED,
@@ -401,9 +401,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 260,
+                .purchasePrice = 6500,
                 .mortgageValue = 130,
-                .baseRental = 22,
+                .baseRental = 600,
                 .houseConstructionCost = 150,
                 .hotelConstructionCost = 200,
                 .mortgageStatus = UNMORTGAGED,
@@ -420,9 +420,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 260,
+                .purchasePrice = 6800,
                 .mortgageValue = 130,
-                .baseRental = 22,
+                .baseRental = 620,
                 .houseConstructionCost = 150,
                 .hotelConstructionCost = 200,
                 .mortgageStatus = UNMORTGAGED,
@@ -451,9 +451,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 280,
+                .purchasePrice = 7000,
                 .mortgageValue = 140,
-                .baseRental = 24,
+                .baseRental = 650,
                 .houseConstructionCost = 150,
                 .hotelConstructionCost = 200,
                 .mortgageStatus = UNMORTGAGED,
@@ -480,9 +480,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 300,
+                .purchasePrice = 8000,
                 .mortgageValue = 150,
-                .baseRental = 26,
+                .baseRental = 750,
                 .houseConstructionCost = 200,
                 .hotelConstructionCost = 250,
                 .mortgageStatus = UNMORTGAGED,
@@ -499,9 +499,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 300,
+                .purchasePrice = 8300,
                 .mortgageValue = 150,
-                .baseRental = 26,
+                .baseRental = 780,
                 .houseConstructionCost = 200,
                 .hotelConstructionCost = 250,
                 .mortgageStatus = UNMORTGAGED,
@@ -531,9 +531,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 320,
+                .purchasePrice = 8500,
                 .mortgageValue = 160,
-                .baseRental = 28,
+                .baseRental = 800,
                 .houseConstructionCost = 200,
                 .hotelConstructionCost = 250,
                 .mortgageStatus = UNMORTGAGED,
@@ -573,9 +573,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 350,
+                .purchasePrice = 10000,
                 .mortgageValue = 175,
-                .baseRental = 35,
+                .baseRental = 1000,
                 .houseConstructionCost = 200,
                 .hotelConstructionCost = 250,
                 .mortgageStatus = UNMORTGAGED,
@@ -601,9 +601,9 @@ void initBoard(){
         .type = PROPERTY,
         .data = {
             .property = {
-                .purchasePrice = 400,
+                .purchasePrice = 12000,
                 .mortgageValue = 200,
-                .baseRental = 50,
+                .baseRental = 1200,
                 .houseConstructionCost = 200,
                 .hotelConstructionCost = 250,
                 .mortgageStatus = UNMORTGAGED,
@@ -615,7 +615,39 @@ void initBoard(){
             }
         }
     };
+    
+    
 
     initPlayers(squares);
 
+
+}
+
+void rollAndMove(currentPlayer players[4], Square squares[40]){
+
+    for(int i = 0; i<4; i++){
+        int passGO = 0;
+
+        diceRoll(&players[i], squares);
+
+        if(players[i].position > 39){
+            passGO = 1;
+            players[i].position = players[i].position - 40;
+        }
+
+        printf("%s moves from Square %d to Square %d.\n",getPlayer(players[i]),players[i].lastPosition,players[i].position);
+        
+        if(passGO){
+            players[i].money += 2000;
+            printf("%s passed GO.\n", getPlayer(players[i]));
+            printf("Collected LKR 2000.\n");
+            printf("Current Balance : LKR %d.\n", players[i].money);
+            passGO = 0;
+        }
+
+        playerActivities(&players[i],squares);
+        printf("\n");
+    }
+    
+    printf("\n");
 }

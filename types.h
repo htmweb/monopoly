@@ -177,8 +177,8 @@ char* getPlayer(currentPlayer player);
 void rollAndMove(currentPlayer players[4], Square squares[40]);
 void playerActivities(currentPlayer *player,Square squares[40]);
 
-void aggressiveInvestor(Square sqaures[40]);
-void conservativeBanker(Square sqaures[40]);
-void riskTaker(Square sqaures[40]);
-void oppurtunisticTrader(Square sqaures[40]);
+void aggressiveInvestor(Square sqaures[40], currentPlayer *current_player);
+void conservativeBanker(Square sqaures[40],currentPlayer *current_player);
+void riskTaker(Square sqaures[40], currentPlayer *current_player);
+void oppurtunisticTrader(Square sqaures[40], currentPlayer *current_player);
 #endif

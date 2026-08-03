@@ -114,20 +114,16 @@ void setOrder(currentPlayer players[4], Square squares[40]){
     }
 
 
-void rollAndMove(currentPlayer players[4], Square squares[40]){
 
-    for(int i = 0; i<4; i++){
-        diceRoll(&players[i], squares);
-        printf("%s moves from Square %d to Square %d.\n",getPlayer(players[i]),players[i].lastPosition,players[i].position);
-        playerActivities(&players[i],squares);
-        printf("\n");
-    }
-    
-    printf("\n");
-}
 void gameLoop(currentPlayer players[4],Square squares[40]){
     setOrder(players, squares);
 
     //check order before roll and move
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
+    rollAndMove(players,squares);
     rollAndMove(players,squares);
 }

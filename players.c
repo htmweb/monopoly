@@ -16,7 +16,7 @@ void initPlayers(Square squares[40]){
         .position = 0,
         .money = 30000,    
         .lastTurnVal = 0,
-        .currentRound = 0,
+        .currentRound = 1,
         .lastRound = 0
     };
     players[1] = (currentPlayer){
@@ -28,7 +28,7 @@ void initPlayers(Square squares[40]){
         .position = 0,
         .money = 30000,    
         .lastTurnVal = 0,
-        .currentRound = 0,
+        .currentRound = 1,
         .lastRound = 0
     };
     players[2] = (currentPlayer){
@@ -40,7 +40,7 @@ void initPlayers(Square squares[40]){
         .position = 0,
         .money = 30000,    
         .lastTurnVal = 0,
-        .currentRound = 0,
+        .currentRound = 1,
         .lastRound = 0
     };
     players[3] = (currentPlayer){
@@ -52,7 +52,7 @@ void initPlayers(Square squares[40]){
         .position = 0,
         .money = 30000,    
         .lastTurnVal = 0,
-        .currentRound = 0,
+        .currentRound = 1,
         .lastRound = 0
     };
 
@@ -104,7 +104,7 @@ void diceRoll(currentPlayer *player, Square squares[40]){
         else{
             same_val = 0;
             player->lastPosition = player->position;
-            player->position = dice1+dice2;
+            player->position = player->lastPosition + dice1+dice2;
 
         }
         printf("%s rolls %d. \n", getPlayer(*player), dice1+dice2);
@@ -115,16 +115,40 @@ void diceRoll(currentPlayer *player, Square squares[40]){
 
 
 //player activities
-void aggressiveInvestor(Square squares[40]){
+void aggressiveInvestor(Square squares[40], currentPlayer *current_player){
+
+    int current_pos = current_player->position;
+    if(squares[current_pos].type == PROPERTY){
+        if(squares[current_pos].data.property.mortgageStatus == UNMORTGAGED){
+            if(squares[current_pos].data.property.owner == -1){
+                int remain = current_player->money - squares[current_pos].data.property.purchasePrice;
+                if(remain >= squares[current_pos].data.property.baseRental){
+                    squares[current_pos].data.property.owner = 0;
+                    current_player->money -= squares[current_pos].data.property.purchasePrice;
+                    printf("%s purchases %s for LKR %d.\n", getPlayer(*current_player), squares[current_pos].data.property.name, squares[current_pos].data.property.purchasePrice);
+                    printf("Remaining Balance : LKR %d.\n", current_player->money);
+                }
+                else{
+                    //start auction
+                }
+            }
+            else{
+                //start auction
+            }
+        }
+    }
+
+
+
 
 }
-void conservativeBanker(Square squares[40]){
+void conservativeBanker(Square squares[40], currentPlayer *current_player){
     
 }
-void riskTaker(Square squares[40]){
+void riskTaker(Square squares[40], currentPlayer *current_player){
     
 }
-void oppurtunisticTrader(Square squares[40]){
+void oppurtunisticTrader(Square squares[40], currentPlayer *current_player){
     
 }
 
@@ -132,16 +156,16 @@ void oppurtunisticTrader(Square squares[40]){
 void playerActivities(currentPlayer *current_player,Square squares[40]){
     switch(current_player->player){
         case AGGRESSIVE_INVESTOR:
-            aggressiveInvestor(squares);
+            aggressiveInvestor(squares,current_player);
             break;
         case CONSERVATIVE_BANKER:
-            conservativeBanker(squares);
+            conservativeBanker(squares,current_player);
             break;
         case RISK_TAKER:
-            riskTaker(squares);
+            riskTaker(squares,current_player);
             break;
         case OPPORTUNISTIC_TRADER:
-            oppurtunisticTrader(squares);
+            oppurtunisticTrader(squares,current_player);
             break;
     }
 }

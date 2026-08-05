@@ -2,6 +2,6 @@
 #include <stdio.h>
 
 int main(){
-    initBoard();
+    gameLoop();
 
 }

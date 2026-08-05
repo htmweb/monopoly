@@ -14,6 +14,16 @@ typedef enum {
     BANK
 } sqType;
 
+typedef enum{
+    NOTIN_JAIL,
+    IN_JAIL
+}Jail;
+
+typedef enum{
+    NOTBANKRUPT,
+    BANKRUPT
+} Bankrupt;
+
 typedef enum {
     AGGRESSIVE_INVESTOR,
     CONSERVATIVE_BANKER,
@@ -72,13 +82,15 @@ typedef struct{
 
 typedef struct{
     int purchasePrice;
+    int baseValue;
     int mortgageValue;
     int baseRental;
     int houseConstructionCost;
     int hotelConstructionCost;
     MortgageStatus mortgageStatus;
     InsuranceStatus insuranceStatus;
-    int numberOfBuildings;
+    int numberOfHouses;
+    int numberOfHotels;
     int groupID;
     Player owner;
     char name[30];
@@ -87,6 +99,7 @@ typedef struct{
 typedef struct{
     int purchasePrice;
     int mortgageValue;
+    int baseRental;
     MortgageStatus mortgageStatus;
     Player owner;
     char name[30];
@@ -96,6 +109,7 @@ typedef struct{
     int purchasePrice;
     int mortgageValue;
     MortgageStatus mortgageStatus;
+    Player owner;
     char name[40];
 }Utility;
 
@@ -151,13 +165,18 @@ typedef struct {
     Owned ownedItems;
     Loan ownedLoans[22];
     Insurance ownedInsurance[22];
-    Player player;
     int lastPosition;
     int position;
     int money;
-    int lastTurnVal;
+    int lastDieVal;
     int currentRound;
     int lastRound;
+    int utilityCount;
+    int propertiesCount;
+    int railwaysCount;
+    Player player;
+    Bankrupt isBankrupt;
+    Jail inJail;
 
 }currentPlayer;
 
@@ -179,24 +198,36 @@ typedef struct {
     int status;
 }Auction;
 
+typedef struct{
+    int rounds;
+    
+}currentStaus;
 
-void initBoard();
-void initPlayers(Square squares[40]);
-void gameLoop(currentPlayer players[4],Square squares[40]);
-void diceRoll(currentPlayer *player, Square squares[40]);
-void setOrder(currentPlayer players[4],Square squares[40]);
+
+void initBoard(Square squares[],currentPlayer players[]);
+void initPlayers(Square squares[],currentPlayer players[]);
+void gameLoop();
+void diceRoll(currentPlayer *player, Square squares[]);
+void setOrder(currentPlayer players[],Square squares[]);
 char* getPlayer(currentPlayer player);
-void rollAndMove(currentPlayer players[4], Square squares[40]);
-void playerActivities(currentPlayer *player,Square squares[40]);
+void rollAndMove(currentPlayer players[], Square squares[]);
 
-void aggressiveInvestor(Square sqaures[40], currentPlayer *current_player);
-void conservativeBanker(Square sqaures[40],currentPlayer *current_player);
-void riskTaker(Square sqaures[40], currentPlayer *current_player);
-void oppurtunisticTrader(Square sqaures[40], currentPlayer *current_player);
 
-void startAuction(Square *square, currentPlayer players[4]);
-void AGG_BIDDING(Auction *auction, currentPlayer *player);
-void CON_BIDDING(Auction *auction, currentPlayer *player);
-void RISK_BIDDING(Auction *auction, currentPlayer *player);
-void OPP_BIDDING(Auction *auction, currentPlayer *player);
+void payRent(currentPlayer players[],currentPlayer *currentPlayer,Square *square,int index);
+void bankRupt(currentPlayer *player);
+
+
+void buyProperty(Square squares[], currentPlayer *current_player,int player_index,currentPlayer players[]);
+void buyRailway(Square squares[], currentPlayer *current_player,int player_index,currentPlayer players[]);
+void buy(Square squares[], currentPlayer *current_player,int player_index,currentPlayer players[]);
+
+void startAuction(Square *square, currentPlayer players[]);
+void AGG_BIDDING(Auction *auction, currentPlayer *player,int index);
+void CON_BIDDING(Auction *auction, currentPlayer *player,int index);
+void RISK_BIDDING(Auction *auction, currentPlayer *player,int index);
+void OPP_BIDDING(Auction *auction, currentPlayer *player,int index);
+
+int roundOff(double num);
+
+
 #endif

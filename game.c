@@ -1,10 +1,11 @@
 #include "types.h"
 #include <stdio.h>
 
-Order order[4];
-int isFirstRun = 1;
 
-void setOrder(currentPlayer players[4], Square squares[40]){
+
+void setOrder(currentPlayer players[], Square squares[]){
+    Order order[4];
+    int isFirstRun = 1;
 
     for(int i = 0; i<4; i++){
         diceRoll(&players[i], squares);
@@ -114,44 +115,63 @@ void setOrder(currentPlayer players[4], Square squares[40]){
     }
 
 
-void startAuction(Square *square, currentPlayer players[4]){
-    printf("\n Auction Started.\n\n");
+void startAuction(Square *square, currentPlayer players[]){
+
+    int purchasePrice = 0;
+
+    printf("\nAuction Started.\n\n");
     printf("Property :\n");
-    printf("%s\n\n", square->data.property.name);
-    printf("Opening Bid : \n");
-    printf("LKR %d\n\n", square->data.property.purchasePrice);
+
+    switch(square->type){
+        case PROPERTY:
+            purchasePrice = square->data.property.purchasePrice;
+            printf("%s\n\n", square->data.property.name);
+        break;
+        case RAILWAY:
+            purchasePrice = square->data.railway.purchasePrice;
+            printf("%s\n\n", square->data.railway.name);
+        break;
+        case UTILITY:
+            purchasePrice = square->data.utility.purchasePrice;
+            printf("%s\n\n", square->data.utility.name);
+        break;
+    }
+    
 
     Auction auction;
 
     auction.square = *square;
-    auction.AGGRESSIVE_INVESTOR_BID = auction.square.data.property.purchasePrice;
-    auction.CONSERVATIVE_BANKER_BID = auction.square.data.property.purchasePrice;
+    auction.AGGRESSIVE_INVESTOR_BID = purchasePrice;
+    auction.CONSERVATIVE_BANKER_BID = purchasePrice;
     auction.RISK_TAKER_BID = -1;//auction.square.data.property.purchasePrice;
     auction.OPPORTUNISTIC_TRADER_BID = -1;//auction.square.data.property.purchasePrice;
-    auction.currentBid = auction.square.data.property.purchasePrice;
+    auction.currentBid = roundOff(purchasePrice * 0.5);
     auction.status = 1;
-    
+
+    printf("Opening Bid : \n");
+    printf("LKR %d\n\n",auction.currentBid);
+
     while(auction.status == 1){
     for(int i = 0; i<4; i++){
         switch(players[i].player){
             case AGGRESSIVE_INVESTOR:
                 if(auction.AGGRESSIVE_INVESTOR_BID != -1){
-                    AGG_BIDDING(&auction, &players[i]);
+                    AGG_BIDDING(&auction, &players[i],i);
                 }
                 break;
             case CONSERVATIVE_BANKER:
                 if(auction.CONSERVATIVE_BANKER_BID != -1){
-                    CON_BIDDING(&auction, &players[i]);
+                    CON_BIDDING(&auction, &players[i],i);
                 }
                 break;
             case RISK_TAKER:
                 if(auction.RISK_TAKER_BID != -1){
-                    RISK_BIDDING(&auction, &players[i]);
+                    RISK_BIDDING(&auction, &players[i],i);
                 }
                 break;
             case OPPORTUNISTIC_TRADER:
                 if(auction.OPPORTUNISTIC_TRADER_BID != -1){
-                    OPP_BIDDING(&auction, &players[i]);
+                    OPP_BIDDING(&auction, &players[i],i);
                 }
                 break;
         }
@@ -174,25 +194,49 @@ void startAuction(Square *square, currentPlayer players[4]){
 
 }
 
-void gameLoop(currentPlayer players[4],Square squares[40]){
+void bankRupt(currentPlayer *player){
+
+}
+void initStatus(currentStaus *status){
+    status->rounds = 0;
+}
+void incrementRound(currentStaus *status,currentPlayer players[]){
+    int offset = 0;
+    int minRounds = 0;
+    for(int i=0; i<=4; i++){
+        if(players[i].inJail == NOTIN_JAIL){
+            minRounds = players[i].currentRound;
+            offset = i;
+            break;
+        }
+    }
+    for(int i = offset; i<4; i++){
+        if(players[i].inJail == NOTIN_JAIL && minRounds > players[i].currentRound){
+            minRounds = players[i].currentRound;
+        }
+    }
+    if(minRounds == status->rounds +1){
+        status->rounds++;
+        printf("\n\nRound %d\n\n", status->rounds);
+    }
+}
+void gameLoop(){
+    Square squares[40];
+    currentPlayer players[4];
+    currentStaus status;
+
+    initStatus(&status);
+    initBoard(squares,players);
+    initPlayers(squares,players);
     setOrder(players, squares);
 
-    //check order before roll and move
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
-    rollAndMove(players,squares);
+
+
+    while(status.rounds<=20 || (players[0].isBankrupt == BANKRUPT && players[1].isBankrupt == BANKRUPT && players[2].isBankrupt == BANKRUPT && players[3].isBankrupt == BANKRUPT)){
+        rollAndMove(players,squares);
+        incrementRound(&status,players);
+    }
+
+    
+   
 }

@@ -1,9 +1,8 @@
 #include "types.h"
 #include <stdio.h>
 
-Square squares[40];
 
-void initBoard(){
+void initBoard(Square squares[],currentPlayer players[]){
     squares[0] = (Square){
         .type = START,
     
@@ -13,13 +12,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 1500,
+                .baseValue = 1500,
                 .mortgageValue = 30,
                 .baseRental = 100,
                 .houseConstructionCost = 50,
                 .hotelConstructionCost = 100,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 1,
                 .owner = -1,
                 .name = "Pettah"
@@ -42,13 +43,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 1800,
+                .baseValue = 1800,
                 .mortgageValue = 30,
                 .baseRental = 120,
                 .houseConstructionCost = 50,
                 .hotelConstructionCost = 100,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 1,
                 .owner = -1,
                 .name = "Maradana"
@@ -84,12 +87,14 @@ void initBoard(){
             .property = {
                 .purchasePrice = 2500,
                 .mortgageValue = 50,
+                .baseValue = 2500,
                 .baseRental = 180,
                 .houseConstructionCost = 50,
                 .hotelConstructionCost = 100,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 2,
                 .owner = -1,
                 .name = "Bambalapitiya"
@@ -112,13 +117,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 2700,
+                .baseValue = 2700,
                 .mortgageValue = 50,
                 .baseRental = 200,
                 .houseConstructionCost = 50,
                 .hotelConstructionCost = 100,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 2,
                 .owner = -1,
                 .name = "Wellawatte"
@@ -131,13 +138,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 3000,
+                .baseValue = 3000,
                 .mortgageValue = 60,
                 .baseRental = 220,
                 .houseConstructionCost = 50,
                 .hotelConstructionCost = 100,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 2,
                 .owner = -1,
                 .name = "Mount Lavinia"
@@ -160,13 +169,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 3500,
+                .baseValue = 3500,
                 .mortgageValue = 70,
                 .baseRental = 260,
                 .houseConstructionCost = 100,
                 .hotelConstructionCost = 150,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 3,
                 .owner = -1,
                 .name = "Nugegoda"
@@ -181,7 +192,8 @@ void initBoard(){
                 .purchasePrice = 150,
                 .mortgageValue = 75,
                 .mortgageStatus = UNMORTGAGED,
-                .name = "Ceylon Electricity Board"
+                .name = "Ceylon Electricity Board",
+                .owner = -1
             }
         }
     };
@@ -191,13 +203,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 3800,
+                .baseValue = 3800,
                 .mortgageValue = 70,
                 .baseRental = 280,
                 .houseConstructionCost = 100,
                 .hotelConstructionCost = 150,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 3,
                 .owner = -1,
                 .name = "Maharagama"
@@ -210,13 +224,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 4000,
+                .baseValue = 4000,
                 .mortgageValue = 80,
                 .baseRental = 300,
                 .houseConstructionCost = 100,
                 .hotelConstructionCost = 150,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 3,
                 .owner = -1,
                 .name = "Kottawa"
@@ -242,13 +258,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 4500,
+                .baseValue = 4500,
                 .mortgageValue = 90,
                 .baseRental = 350,
                 .houseConstructionCost = 100,
                 .hotelConstructionCost = 150,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 4,
                 .owner = -1,
                 .name = "Negombo"
@@ -274,13 +292,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 4700,
+                .baseValue = 4700,
                 .mortgageValue = 90,
                 .baseRental = 370,
                 .houseConstructionCost = 100,
                 .hotelConstructionCost = 150,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 4,
                 .owner = -1,
                 .name = "Katunayake"
@@ -293,13 +313,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 5000,
+                .baseValue = 5000,
                 .mortgageValue = 100,
                 .baseRental = 400,
                 .houseConstructionCost = 100,
                 .hotelConstructionCost = 150,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 4,
                 .owner = -1,
                 .name = "Ja-Ela"
@@ -322,13 +344,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 5500,
+                .baseValue = 5500,
                 .mortgageValue = 110,
                 .baseRental = 450,
                 .houseConstructionCost = 150,
                 .hotelConstructionCost = 200,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 5,
                 .owner = -1,
                 .name = "Kandy City"
@@ -351,13 +375,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 5800,
+                .baseValue = 5800,
                 .mortgageValue = 110,
                 .baseRental = 480,
                 .houseConstructionCost = 150,
                 .hotelConstructionCost = 200,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 5,
                 .owner = -1,
                 .name = "Peradeniya"
@@ -370,13 +396,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 6000,
+                .baseValue = 6000,
                 .mortgageValue = 120,
                 .baseRental = 500,
                 .houseConstructionCost = 150,
                 .hotelConstructionCost = 200,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 5,
                 .owner = -1,
                 .name = "Katugastota"
@@ -402,13 +430,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 6500,
+                .baseValue = 6500,
                 .mortgageValue = 130,
                 .baseRental = 600,
                 .houseConstructionCost = 150,
                 .hotelConstructionCost = 200,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 6,
                 .owner = -1,
                 .name = "Galle Fort"
@@ -421,13 +451,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 6800,
+                .baseValue = 6800,
                 .mortgageValue = 130,
                 .baseRental = 620,
                 .houseConstructionCost = 150,
                 .hotelConstructionCost = 200,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 6,
                 .owner = -1,
                 .name = "Unawatuna"
@@ -442,7 +474,8 @@ void initBoard(){
                 .purchasePrice = 150,
                 .mortgageValue = 75,
                 .mortgageStatus = UNMORTGAGED,
-                .name = "National Water Supply and Drainage Board"
+                .name = "National Water Supply and Drainage Board",
+                .owner = -1
             }
         }
     };
@@ -452,13 +485,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 7000,
+                .baseValue = 7000,
                 .mortgageValue = 140,
                 .baseRental = 650,
                 .houseConstructionCost = 150,
                 .hotelConstructionCost = 200,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 6,
                 .owner = -1,
                 .name = "Hikkaduwa"
@@ -481,13 +516,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 8000,
+                .baseValue = 8000,
                 .mortgageValue = 150,
                 .baseRental = 750,
                 .houseConstructionCost = 200,
                 .hotelConstructionCost = 250,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 7,
                 .owner = -1,
                 .name = "Jaffna Town"
@@ -500,13 +537,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 8300,
+                .baseValue = 8300,
                 .mortgageValue = 150,
                 .baseRental = 780,
                 .houseConstructionCost = 200,
                 .hotelConstructionCost = 250,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 7,
                 .owner = -1,
                 .name = "Nallur"
@@ -532,13 +571,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 8500,
+                .baseValue = 8500,
                 .mortgageValue = 160,
                 .baseRental = 800,
                 .houseConstructionCost = 200,
                 .hotelConstructionCost = 250,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 7,
                 .owner = -1,
                 .name = "Trincomalee"
@@ -574,13 +615,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 10000,
+                .baseValue = 10000,
                 .mortgageValue = 175,
                 .baseRental = 1000,
                 .houseConstructionCost = 200,
                 .hotelConstructionCost = 250,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 8,
                 .owner = -1,
                 .name = "Nuwara Eliya"
@@ -602,13 +645,15 @@ void initBoard(){
         .data = {
             .property = {
                 .purchasePrice = 12000,
+                .baseValue = 12000,
                 .mortgageValue = 200,
                 .baseRental = 1200,
                 .houseConstructionCost = 200,
                 .hotelConstructionCost = 250,
                 .mortgageStatus = UNMORTGAGED,
                 .insuranceStatus = UNINSURED,
-                .numberOfBuildings = 0,
+                .numberOfHouses = 0,
+                .numberOfHotels = 0,
                 .groupID = 8,
                 .owner = -1,
                 .name = "Galle Face"
@@ -616,14 +661,19 @@ void initBoard(){
         }
     };
     
-    
-
-    initPlayers(squares);
-
 
 }
 
-void rollAndMove(currentPlayer players[4], Square squares[40]){
+int roundOff(double num){
+    if(num - (int)num >= 0.5){
+        return (int)num + 1;
+    }
+    else{
+        return (int)num;
+    }
+}
+
+void rollAndMove(currentPlayer players[], Square squares[]){
 
     for(int i = 0; i<4; i++){
         int passGO = 0;
@@ -639,14 +689,21 @@ void rollAndMove(currentPlayer players[4], Square squares[40]){
         
         if(passGO){
             players[i].money += 2000;
+            players[i].lastRound = players[i].currentRound;
+            players[i].currentRound++;
+            
             printf("%s passed GO.\n", getPlayer(players[i]));
             printf("Collected LKR 2000.\n");
             printf("Current Balance : LKR %d.\n", players[i].money);
             passGO = 0;
         }
-
-        playerActivities(&players[i],squares);
         printf("\n");
+        
+        int current_player_position = players[i].position;
+
+        buy(squares,&players[i],i,players);
+        payRent(players,&players[i],&squares[current_player_position],i);
+        
     }
     
     printf("\n");

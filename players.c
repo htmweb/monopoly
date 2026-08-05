@@ -6,7 +6,7 @@
 const int BID_VAL = 250;
 
 void initPlayers(Square squares[40],currentPlayer players[4]){
-    srand(9);
+    srand(0);
 
     players[0] = (currentPlayer){
         .ownedItems = {},

@@ -166,6 +166,7 @@ typedef struct {
     Loan ownedLoans[22];
     Insurance ownedInsurance[22];
     int lastPosition;
+    int loanAmount;
     int position;
     int money;
     int lastDieVal;
@@ -174,6 +175,7 @@ typedef struct {
     int utilityCount;
     int propertiesCount;
     int railwaysCount;
+    int numberOfHotels;
     Player player;
     Bankrupt isBankrupt;
     Jail inJail;

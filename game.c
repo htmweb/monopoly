@@ -200,6 +200,24 @@ void bankRupt(currentPlayer *player){
 void initStatus(currentStaus *status){
     status->rounds = 0;
 }
+void printRoundSummary(currentStaus *status,currentPlayer players[]){
+    printf("==================================\n");
+    printf("Round %d Summary\n", status->rounds);
+    printf("==================================\n");
+    for(int i = 0; i<4; i++){
+        printf("Player %d : %s \n", i+1, getPlayer(players[i]));
+        printf("Cash : LKR %d.\n", players[i].money);
+        
+        //need to calculate
+        
+        printf("NetWorth : %d.\n", players[i].money);
+        printf("Properties : %d.\n", players[i].propertiesCount);
+        printf("Hotels : %d.\n", players[i].numberOfHotels);
+        printf("Outstanding Loan : %d.\n", players[i].loanAmount);
+        printf("--------------------------------\n");
+    }
+    printf("\n");
+}
 void incrementRound(currentStaus *status,currentPlayer players[]){
     int offset = 0;
     int minRounds = 0;
@@ -217,7 +235,8 @@ void incrementRound(currentStaus *status,currentPlayer players[]){
     }
     if(minRounds == status->rounds +1){
         status->rounds++;
-        printf("\n\nRound %d\n\n", status->rounds);
+        
+        printRoundSummary(status,players);
     }
 }
 void gameLoop(){

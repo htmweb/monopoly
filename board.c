@@ -72,8 +72,8 @@ void initBoard(Square squares[],currentPlayer players[]){
         .type = RAILWAY,
         .data = {
             .railway = {
-                .purchasePrice = 200,
-                .mortgageValue = 100,
+                .purchasePrice = 1500,
+                .mortgageValue = 750,
                 .mortgageStatus = UNMORTGAGED,
                 .owner = -1,
                 .name = "Colombo Fort Railway Station"
@@ -189,8 +189,8 @@ void initBoard(Square squares[],currentPlayer players[]){
         .type = UTILITY,
         .data = {
             .utility = {
-                .purchasePrice = 150,
-                .mortgageValue = 75,
+                .purchasePrice = 1500,
+                .mortgageValue = 750,
                 .mortgageStatus = UNMORTGAGED,
                 .name = "Ceylon Electricity Board",
                 .owner = -1
@@ -244,8 +244,8 @@ void initBoard(Square squares[],currentPlayer players[]){
         .type = RAILWAY,
         .data = {
             .railway = {
-                .purchasePrice = 200,
-                .mortgageValue = 100,
+                .purchasePrice = 1500,
+                .mortgageValue = 750,
                 .mortgageStatus = UNMORTGAGED,
                 .owner = -1,
                 .name = "Kandy Railway Station"
@@ -416,8 +416,8 @@ void initBoard(Square squares[],currentPlayer players[]){
         .type = RAILWAY,
         .data = {
             .railway = {
-                .purchasePrice = 200,
-                .mortgageValue = 100,
+                .purchasePrice = 1500,
+                .mortgageValue = 750,
                 .mortgageStatus = UNMORTGAGED,
                 .owner = -1,
                 .name = "Galle Railway Station"
@@ -471,8 +471,8 @@ void initBoard(Square squares[],currentPlayer players[]){
         .type = UTILITY,
         .data = {
             .utility = {
-                .purchasePrice = 150,
-                .mortgageValue = 75,
+                .purchasePrice = 1500,
+                .mortgageValue = 750,
                 .mortgageStatus = UNMORTGAGED,
                 .name = "National Water Supply and Drainage Board",
                 .owner = -1
@@ -591,8 +591,8 @@ void initBoard(Square squares[],currentPlayer players[]){
         .type = RAILWAY,
         .data = {
             .railway = {
-                .purchasePrice = 200,
-                .mortgageValue = 100,
+                .purchasePrice = 1500,
+                .mortgageValue = 750,
                 .mortgageStatus = UNMORTGAGED,
                 .owner = -1,
                 .name = "Jaffna Railway Station"
@@ -673,38 +673,57 @@ int roundOff(double num){
     }
 }
 
-void rollAndMove(currentPlayer players[], Square squares[]){
+
+void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status,EconomicState *econStatus){
 
     for(int i = 0; i<4; i++){
         int passGO = 0;
+        int tmp_pos = 0;
+
+        checkAndReleaseFromJail(&players[i],status);
 
         diceRoll(&players[i], squares);
 
-        if(players[i].position > 39){
+        if(players[i].position>39){
+            tmp_pos = players[i].position - 40;
+        }
+        else{
+            tmp_pos = players[i].position;
+        }
+
+        handleJail(&squares[tmp_pos], &players[i],status,econStatus);
+        
+        if(players[i].inJail == NOTIN_JAIL){
+            if(players[i].position > 39){
             passGO = 1;
             players[i].position = players[i].position - 40;
-        }
+             }
 
-        printf("%s moves from Square %d to Square %d.\n",getPlayer(players[i]),players[i].lastPosition,players[i].position);
-        
-        if(passGO){
-            players[i].money += 2000;
-            players[i].lastRound = players[i].currentRound;
-            players[i].currentRound++;
+            if(players[i].jailedTurn != status->turn){
+            printf("%s moves from Square %d to Square %d.\n",getPlayer(players[i]),players[i].lastPosition,players[i].position);
+            }
             
-            printf("%s passed GO.\n", getPlayer(players[i]));
-            printf("Collected LKR 2000.\n");
-            printf("Current Balance : LKR %d.\n", players[i].money);
-            passGO = 0;
-        }
-        printf("\n");
+            if(passGO){
+              players[i].money += 2000;
+              players[i].lastRound = players[i].currentRound;
+              players[i].currentRound++;
+            
+              printf("%s passed GO.\n", getPlayer(players[i]));
+              printf("Collected LKR 2000.\n");
+              printf("Current Balance : LKR %d.\n", players[i].money);
+              passGO = 0;
+            }
+            printf("\n");
         
-        int current_player_position = players[i].position;
+            int current_player_position = players[i].position;
 
-        buy(squares,&players[i],i,players);
-        payRent(players,&players[i],&squares[current_player_position],i);
-        
+            buy(squares,&players[i],i,players);
+            payRent(players,&players[i],&squares[current_player_position],i);
+        }
+
+       
     }
+
     
     printf("\n");
 }

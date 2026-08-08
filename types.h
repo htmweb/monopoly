@@ -20,6 +20,16 @@ typedef enum{
 }Jail;
 
 typedef enum{
+    LOAN_LOCKED,
+    NOT_LOAN_LOCKED
+}LoanStatus;
+
+typedef enum{
+    MORTGAGED,
+    UNMORTGAGED
+}MortgageStatus;
+
+typedef enum{
     NOTBANKRUPT,
     BANKRUPT
 } Bankrupt;
@@ -30,11 +40,6 @@ typedef enum {
     RISK_TAKER,
     OPPORTUNISTIC_TRADER
 } Player;
-
-typedef enum {
-    MORTGAGED,
-    UNMORTGAGED
-}MortgageStatus;
 
 typedef enum {
     INSURED,
@@ -94,6 +99,7 @@ typedef struct{
     int groupID;
     Player owner;
     char name[30];
+    LoanStatus isLocked;
 }Property;
 
 typedef struct{
@@ -146,6 +152,7 @@ typedef union{
 typedef struct{
     int loanAmount;
     int balance;
+    int interestRate;
     Player owner;
     Data data;
 }Loan;
@@ -176,6 +183,7 @@ typedef struct {
     int propertiesCount;
     int railwaysCount;
     int numberOfHotels;
+    int jailedTurn;
     Player player;
     Bankrupt isBankrupt;
     Jail inJail;
@@ -202,8 +210,14 @@ typedef struct {
 
 typedef struct{
     int rounds;
-    
-}currentStaus;
+    int turn;
+}currentStatus;
+
+typedef struct {
+    int currentInflationRate;  
+    int currentLoanInterestRate; 
+} EconomicState;
+
 
 
 void initBoard(Square squares[],currentPlayer players[]);
@@ -212,9 +226,9 @@ void gameLoop();
 void diceRoll(currentPlayer *player, Square squares[]);
 void setOrder(currentPlayer players[],Square squares[]);
 char* getPlayer(currentPlayer player);
-void rollAndMove(currentPlayer players[], Square squares[]);
+void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status,EconomicState *econStatus);
 
-
+int getMaxRent(Square squares[],currentPlayer *cPlayer);
 void payRent(currentPlayer players[],currentPlayer *currentPlayer,Square *square,int index);
 void bankRupt(currentPlayer *player);
 
@@ -231,5 +245,12 @@ void OPP_BIDDING(Auction *auction, currentPlayer *player,int index);
 
 int roundOff(double num);
 
+void applyInflation(Square squares[], EconomicState *econ, int newRate);
+int generateInflationRate();
+void printMarketCondition(EconomicState *econ);
+
+void handleJail(Square *square, currentPlayer *player,currentStatus *status,EconomicState *econStatus);
+void releaseFromJail(currentPlayer *currentPlayer);
+void checkAndReleaseFromJail(currentPlayer *currentPlayer,currentStatus *status);
 
 #endif

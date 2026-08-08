@@ -22,7 +22,9 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .utilityCount = 0,
         .propertiesCount = 0,
         .railwaysCount = 0,
-        .isBankrupt = 0
+        .isBankrupt = 0,
+        .jailedTurn = 0,
+        .inJail = NOTIN_JAIL
 
     };
     players[1] = (currentPlayer){
@@ -39,7 +41,9 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .utilityCount = 0,
         .propertiesCount = 0,
         .railwaysCount = 0,
-        .isBankrupt = 0
+        .isBankrupt = 0,
+        .jailedTurn = 0,
+        .inJail = NOTIN_JAIL
     };
     players[2] = (currentPlayer){
         .ownedItems = {},
@@ -55,7 +59,9 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .utilityCount = 0,
         .propertiesCount = 0,
         .railwaysCount = 0,
-        .isBankrupt = 0
+        .isBankrupt = 0,
+        .jailedTurn = 0,
+        .inJail = NOTIN_JAIL
     };
     players[3] = (currentPlayer){
         .ownedItems = {},
@@ -71,7 +77,9 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .utilityCount = 0,
         .propertiesCount = 0,
         .railwaysCount = 0,
-        .isBankrupt = 0
+        .isBankrupt = 0,
+        .jailedTurn = 0,
+        .inJail = NOTIN_JAIL
     };
 
     printf("\nMONOPOLY-LK Simulation \n\n");
@@ -96,6 +104,7 @@ char* getPlayer(currentPlayer cPlayer){
             return "Opportunistic Trader";
     }
 }
+
 void diceRoll(currentPlayer *player, Square squares[]){
     int dice1 = 0;
     int dice2 = 0;
@@ -112,8 +121,9 @@ void diceRoll(currentPlayer *player, Square squares[]){
     
 
         if(dice1 == dice2){
-            if(current_square_data.special.type == GO_TO_JAIL){
+            if(current_square_data.special.type == JAIL_JUST_VISITING && player->inJail == IN_JAIL){
                 same_val = 0;
+                releaseFromJail(player);
             }
             else{
                 same_val = 1;
@@ -121,12 +131,20 @@ void diceRoll(currentPlayer *player, Square squares[]){
         }
         else{
             same_val = 0;
-            player->lastPosition = player->position;
-            player->position = player->lastPosition + dice1+dice2;
-            player->lastDieVal = dice1+dice2;
+            if(player->inJail == NOTIN_JAIL){
+                player->lastPosition = player->position;
+                player->position = player->lastPosition + dice1+dice2;
+                player->lastDieVal = dice1+dice2;
+            }
+            
 
         }
-        printf("%s rolls %d. \n", getPlayer(*player), dice1+dice2);
+
+        if(player->inJail == NOTIN_JAIL){
+            printf("%s rolls %d. \n", getPlayer(*player), dice1+dice2);
+        }
+        
+        
     
         
     }
@@ -166,7 +184,7 @@ void CON_BIDDING(Auction *auction, currentPlayer *player,int player_index){
         }
     }
 
-    else if((auction->currentBid)+BID_VAL <= auction->square.data.property.purchasePrice * 120){
+    else if((auction->currentBid)+BID_VAL <= auction->square.data.property.purchasePrice * 1.2){
         if((auction->currentBid)+BID_VAL <= player->money){
             auction->CONSERVATIVE_BANKER_BID = auction->currentBid + BID_VAL;
             auction->currentBid = auction->currentBid + BID_VAL;
@@ -203,7 +221,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                printf("Owner : %s.\n", getPlayer(*owner));
            }
            else{
-             
+              
            }
            
        }
@@ -283,6 +301,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                     }
                     payRentAndPrint(rent,square->data.railway.name,players,&players[ownerID],currentPlayer,square);
                 }
+                break;
 
             case UTILITY:
                 if(square->data.utility.owner != players[playerIndex].player && square->data.utility.mortgageStatus == UNMORTGAGED && square->data.utility.owner != -1){
@@ -308,10 +327,20 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                         
                     }
                 }
+                break;
        }
        
    }
 //
+int getMaxRent(Square squares[],currentPlayer *cPlayer) {
+    int maxRent = 0;
+    for (int i = 0; i < 40; i++) {
+        if (squares[i].type == PROPERTY && squares[i].data.property.owner != cPlayer->player && squares[i].data.property.baseRental > maxRent) {
+            maxRent = squares[i].data.property.baseRental;
+        }
+    }
+    return maxRent;
+}
 
 void buyProperty(Square squares[], currentPlayer *current_player,int player_index,currentPlayer players[]){
     int current_pos = current_player->position;
@@ -321,14 +350,12 @@ void buyProperty(Square squares[], currentPlayer *current_player,int player_inde
             if(squares[current_pos].data.property.mortgageStatus == UNMORTGAGED){
                 if(squares[current_pos].data.property.owner == -1){
                     int remain = current_player->money - squares[current_pos].data.property.purchasePrice;
-                    int maxRentSqID = -1;
                     int maxRent = 0;
 
-                    for(int i=0; i<4; i++){
+                    for(int i=0; i<40; i++){
                         if(squares[i].type == PROPERTY && squares[i].data.property.owner != -1 && squares[i].data.property.mortgageStatus == UNMORTGAGED && squares[i].data.property.owner!=player_index){
                             if(squares[i].data.property.baseRental > maxRent){
                             maxRent = squares[i].data.property.baseRental;
-                            maxRentSqID = i;
                             }
                         }
                     }
@@ -560,7 +587,47 @@ void buy(Square squares[], currentPlayer *current_player,int player_index,curren
     }
 }
 
+void handleJail(Square *square, currentPlayer *cPlayer,currentStatus *status,EconomicState *econStatus) {
+    
+      if(square->type == SPECIAL && square->data.special.type == GO_TO_JAIL){
+        cPlayer->inJail = IN_JAIL;
+        cPlayer->position = 10;
+        cPlayer->jailedTurn = status->turn;
+        printf("%s has been sent to Jail.\n", getPlayer(*cPlayer));
 
+        if(cPlayer->player == AGGRESSIVE_INVESTOR || cPlayer->player == RISK_TAKER){
+            if(cPlayer->money >= 300){
+                cPlayer->money -= 300;
+                cPlayer->inJail = NOTIN_JAIL;
+                printf("%s has been released from jail after paying 300 LKR.\n", getPlayer(*cPlayer));
+            }
+        }
+        else if(cPlayer->player == OPPORTUNISTIC_TRADER){
+            if(cPlayer->money >= 300 && econStatus->currentInflationRate <= 2){
+                cPlayer->money -= 300;
+                cPlayer->inJail = NOTIN_JAIL;
+                printf("%s has been released from jail after paying 300 LKR.\n", getPlayer(*cPlayer));
+            }
+        }
+
+      }
+
+
+}
+void releaseFromJail(currentPlayer *currentPlayer){
+    if(currentPlayer->inJail == IN_JAIL){
+        currentPlayer->inJail = NOTIN_JAIL;
+        printf("%s has been released from jail.\n", getPlayer(*currentPlayer));
+    }
+}
+void checkAndReleaseFromJail(currentPlayer *currentPlayer,currentStatus *status){
+    if(currentPlayer->inJail == IN_JAIL){
+        if(currentPlayer->jailedTurn +4 == status->turn){
+            currentPlayer->inJail = NOTIN_JAIL;
+            printf("%s has been released from jail after 3 turns.\n", getPlayer(*currentPlayer));
+        }
+    }
+}
 
 
 

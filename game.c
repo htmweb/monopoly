@@ -197,10 +197,11 @@ void startAuction(Square *square, currentPlayer players[]){
 void bankRupt(currentPlayer *player){
 
 }
-void initStatus(currentStaus *status){
+void initStatus(currentStatus *status){
     status->rounds = 0;
+    status->turn = 0;
 }
-void printRoundSummary(currentStaus *status,currentPlayer players[]){
+void printRoundSummary(currentStatus *status,currentPlayer players[]){
     printf("==================================\n");
     printf("Round %d Summary\n", status->rounds);
     printf("==================================\n");
@@ -218,9 +219,9 @@ void printRoundSummary(currentStaus *status,currentPlayer players[]){
     }
     printf("\n");
 }
-void incrementRound(currentStaus *status,currentPlayer players[]){
+void incrementRound(currentStatus *status,currentPlayer players[]){
     int offset = 0;
-    int minRounds = 0;
+    int minRounds = 1;
     for(int i=0; i<=4; i++){
         if(players[i].inJail == NOTIN_JAIL){
             minRounds = players[i].currentRound;
@@ -239,10 +240,12 @@ void incrementRound(currentStaus *status,currentPlayer players[]){
         printRoundSummary(status,players);
     }
 }
+
 void gameLoop(){
     Square squares[40];
     currentPlayer players[4];
-    currentStaus status;
+    currentStatus status;
+    EconomicState econStatus;
 
     initStatus(&status);
     initBoard(squares,players);
@@ -250,11 +253,27 @@ void gameLoop(){
     setOrder(players, squares);
 
 
+    int prevRound = 0;
 
+
+    applyInflation(squares, &econStatus, generateInflationRate());
+    
     while(status.rounds<=20 || (players[0].isBankrupt == BANKRUPT && players[1].isBankrupt == BANKRUPT && players[2].isBankrupt == BANKRUPT && players[3].isBankrupt == BANKRUPT)){
-        rollAndMove(players,squares);
+        prevRound = status.rounds;
+        rollAndMove(players,squares,&status,&econStatus);
+
+        
         incrementRound(&status,players);
+
+        if(prevRound != status.rounds && status.rounds % 10 == 0){
+            applyInflation(squares, &econStatus, generateInflationRate());
+            printMarketCondition(&econStatus);
+        }
+
+        status.turn++;
+        
     }
+    
 
     
    

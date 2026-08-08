@@ -201,25 +201,8 @@ void initStatus(currentStatus *status){
     status->rounds = 0;
     status->turn = 0;
 }
-void printRoundSummary(currentStatus *status,currentPlayer players[]){
-    printf("==================================\n");
-    printf("Round %d Summary\n", status->rounds);
-    printf("==================================\n");
-    for(int i = 0; i<4; i++){
-        printf("Player %d : %s \n", i+1, getPlayer(players[i]));
-        printf("Cash : LKR %d.\n", players[i].money);
-        
-        //need to calculate
-        
-        printf("NetWorth : %d.\n", players[i].money);
-        printf("Properties : %d.\n", players[i].propertiesCount);
-        printf("Hotels : %d.\n", players[i].numberOfHotels);
-        printf("Outstanding Loan : %d.\n", players[i].loanAmount);
-        printf("--------------------------------\n");
-    }
-    printf("\n");
-}
-void incrementRound(currentStatus *status,currentPlayer players[]){
+
+void incrementRound(currentStatus *status,currentPlayer players[],Square squares[]){
     int offset = 0;
     int minRounds = 1;
     for(int i=0; i<=4; i++){
@@ -237,7 +220,23 @@ void incrementRound(currentStatus *status,currentPlayer players[]){
     if(minRounds == status->rounds +1){
         status->rounds++;
         
-        printRoundSummary(status,players);
+        printf("==================================\n");
+        printf("Round %d Summary\n", status->rounds);
+        printf("==================================\n");
+
+        for(int i = 0; i<4; i++){
+
+            int networth = getNetWorth(&players[i], squares);
+
+            printf("Player %d : %s \n", i+1, getPlayer(players[i]));
+            printf("Cash : LKR %d.\n", players[i].money);        
+            printf("NetWorth : %d.\n", networth);
+            printf("Properties : %d.\n", players[i].propertiesCount);
+            printf("Hotels : %d.\n", players[i].numberOfHotels);
+            printf("Outstanding Loan : %d.\n", players[i].loanAmount);
+            printf("--------------------------------\n");
+    }
+    printf("\n");
     }
 }
 
@@ -263,7 +262,7 @@ void gameLoop(){
         rollAndMove(players,squares,&status,&econStatus);
 
         
-        incrementRound(&status,players);
+        incrementRound(&status,players,squares);
 
         if(prevRound != status.rounds && status.rounds % 10 == 0){
             applyInflation(squares, &econStatus, generateInflationRate());

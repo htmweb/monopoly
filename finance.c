@@ -43,6 +43,36 @@ void applyInflation(Square squares[], EconomicState *econState, int newRate) {
     econState->currentLoanInterestRate = roundOff(econState->currentLoanInterestRate * factor);
 
 }
+int getNetWorth(currentPlayer *player, Square squares[]) {
+    int netWorth = player->money;
+
+    for (int i = 0; i < 40; i++) {
+        Square *sq = &squares[i];
+        switch (sq->type) {
+            case PROPERTY:
+                if (sq->data.property.owner == player->player) {
+                    netWorth += sq->data.property.baseValue;
+                    netWorth += sq->data.property.numberOfHouses * sq->data.property.houseConstructionCost;
+                    netWorth += sq->data.property.numberOfHotels * sq->data.property.hotelConstructionCost;
+                }
+                break;
+            case RAILWAY:
+                if (sq->data.railway.owner == player->player) {
+                    netWorth += sq->data.railway.purchasePrice;
+                }
+                break;
+            case UTILITY:
+                if (sq->data.utility.owner == player->player) {
+                    netWorth += sq->data.utility.purchasePrice;
+                }
+                break;
+        }
+    }
+
+    netWorth -= player->loanAmount; 
+
+    return netWorth;
+}
 void printMarketCondition(EconomicState *econState) {
     printf("==================================\n");
     printf("Current Market Conditions\n");

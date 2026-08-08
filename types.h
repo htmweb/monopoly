@@ -150,12 +150,14 @@ typedef union{
 } Data;
 
 typedef struct{
-    int loanAmount;
-    int balance;
-    int interestRate;
-    Player owner;
-    Data data;
-}Loan;
+    int loanAmount;        
+    int originalAmount;     
+    int interestRate;        
+    int roundsRemaining;     
+    int collateralIndices[26]; 
+    int collateralCount;
+    int isActive;
+} Loan;
 
 typedef struct {
     sqType type;
@@ -170,7 +172,7 @@ typedef struct {
 
 typedef struct {
     Owned ownedItems;
-    Loan ownedLoans[22];
+    Loan ownedLoan;
     Insurance ownedInsurance[22];
     int lastPosition;
     int loanAmount;
@@ -252,5 +254,7 @@ void printMarketCondition(EconomicState *econ);
 void handleJail(Square *square, currentPlayer *player,currentStatus *status,EconomicState *econStatus);
 void releaseFromJail(currentPlayer *currentPlayer);
 void checkAndReleaseFromJail(currentPlayer *currentPlayer,currentStatus *status);
+
+int getNetWorth(currentPlayer *player, Square squares[]);
 
 #endif

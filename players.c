@@ -11,7 +11,6 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
     players[0] = (currentPlayer){
         .ownedItems = {},
         .player = AGGRESSIVE_INVESTOR,
-        .ownedLoans = {},
         .ownedInsurance = {},
         .lastPosition = 0,
         .position = 0,
@@ -30,7 +29,6 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
     players[1] = (currentPlayer){
         .ownedItems = {},
         .player = CONSERVATIVE_BANKER,
-        .ownedLoans = {},
         .ownedInsurance = {},
         .lastPosition = 0,
         .position = 0,
@@ -48,7 +46,6 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
     players[2] = (currentPlayer){
         .ownedItems = {},
         .player = RISK_TAKER,
-        .ownedLoans = {},
         .ownedInsurance = {},
         .lastPosition = 0,
         .position = 0,
@@ -66,7 +63,6 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
     players[3] = (currentPlayer){
         .ownedItems = {},
         .player = OPPORTUNISTIC_TRADER,
-        .ownedLoans = {},
         .ownedInsurance = {},
         .lastPosition = 0,
         .position = 0,

@@ -22,8 +22,9 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .propertiesCount = 0,
         .railwaysCount = 0,
         .isBankrupt = 0,
-        .jailedTurn = 0,
-        .inJail = NOTIN_JAIL
+        .jailedTurn = -1,
+        .inJail = NOTIN_JAIL,
+        .isLoanActive = 0
 
     };
     players[1] = (currentPlayer){
@@ -40,8 +41,9 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .propertiesCount = 0,
         .railwaysCount = 0,
         .isBankrupt = 0,
-        .jailedTurn = 0,
-        .inJail = NOTIN_JAIL
+        .jailedTurn = -1,
+        .inJail = NOTIN_JAIL,
+        .isLoanActive = 0
     };
     players[2] = (currentPlayer){
         .ownedItems = {},
@@ -57,8 +59,9 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .propertiesCount = 0,
         .railwaysCount = 0,
         .isBankrupt = 0,
-        .jailedTurn = 0,
-        .inJail = NOTIN_JAIL
+        .jailedTurn = -1,
+        .inJail = NOTIN_JAIL,
+        .isLoanActive = 0
     };
     players[3] = (currentPlayer){
         .ownedItems = {},
@@ -74,8 +77,9 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .propertiesCount = 0,
         .railwaysCount = 0,
         .isBankrupt = 0,
-        .jailedTurn = 0,
-        .inJail = NOTIN_JAIL
+        .jailedTurn = -1,
+        .inJail = NOTIN_JAIL,
+        .isLoanActive = 0
     };
 
     printf("\nMONOPOLY-LK Simulation \n\n");
@@ -214,7 +218,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                
                printf("\n%s landed on %s.\n", getPlayer(*currentPlayer),name);
                printf("Rent Paid : LKR %d.\n", rent);
-               printf("Owner : %s.\n", getPlayer(*owner));
+               printf("Owner : %s.\n\n", getPlayer(*owner));
            }
            else{
               
@@ -331,13 +335,36 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
 int getMaxRent(Square squares[],currentPlayer *cPlayer) {
     int maxRent = 0;
     for (int i = 0; i < 40; i++) {
-        if (squares[i].type == PROPERTY && squares[i].data.property.owner != cPlayer->player && squares[i].data.property.baseRental > maxRent) {
+        if (squares[i].type == PROPERTY && squares[i].data.property.owner != cPlayer->player && squares[i].data.property.owner != -1 && squares[i].data.property.baseRental > maxRent) {
             maxRent = squares[i].data.property.baseRental;
         }
     }
     return maxRent;
 }
 
+int getOwnedItems(Square squares[], currentPlayer *current_player) {
+    int items = 0;
+    for(int i=0; i<40; i++){
+        switch(squares[i].type){
+            case PROPERTY:
+                if(squares[i].data.property.owner == current_player->player && squares[i].data.property.mortgageStatus == UNMORTGAGED && squares[i].data.property.isLocked == NOT_LOAN_LOCKED){
+                    items++;
+                }
+            break;
+            case RAILWAY:
+                if(squares[i].data.railway.owner == current_player->player && squares[i].data.railway.mortgageStatus == UNMORTGAGED && squares[i].data.railway.isLocked == NOT_LOAN_LOCKED){
+                    items++;
+                }
+            break;
+            case UTILITY:
+                if(squares[i].data.utility.owner == current_player->player && squares[i].data.utility.mortgageStatus == UNMORTGAGED && squares[i].data.utility.isLocked == NOT_LOAN_LOCKED){
+                    items++;
+                }
+            break;
+        }
+    }
+    return items;
+}
 void buyProperty(Square squares[], currentPlayer *current_player,int player_index,currentPlayer players[]){
     int current_pos = current_player->position;
 
@@ -346,16 +373,7 @@ void buyProperty(Square squares[], currentPlayer *current_player,int player_inde
             if(squares[current_pos].data.property.mortgageStatus == UNMORTGAGED){
                 if(squares[current_pos].data.property.owner == -1){
                     int remain = current_player->money - squares[current_pos].data.property.purchasePrice;
-                    int maxRent = 0;
-
-                    for(int i=0; i<40; i++){
-                        if(squares[i].type == PROPERTY && squares[i].data.property.owner != -1 && squares[i].data.property.mortgageStatus == UNMORTGAGED && squares[i].data.property.owner!=player_index){
-                            if(squares[i].data.property.baseRental > maxRent){
-                            maxRent = squares[i].data.property.baseRental;
-                            }
-                        }
-                    }
-                    
+                    int maxRent = getMaxRent(squares,current_player);
                     if(remain >= maxRent){
                         squares[current_pos].data.property.owner = AGGRESSIVE_INVESTOR;
                         current_player->money -= squares[current_pos].data.property.purchasePrice;
@@ -621,6 +639,33 @@ void checkAndReleaseFromJail(currentPlayer *currentPlayer,currentStatus *status)
         if(currentPlayer->jailedTurn +4 == status->turn){
             currentPlayer->inJail = NOTIN_JAIL;
             printf("%s has been released from jail after 3 turns.\n", getPlayer(*currentPlayer));
+        }
+    }
+}
+void handleBank(Square squares[],Square *square, currentPlayer *cPlayer,currentStatus *status,EconomicState *econStatus) {
+    if(square->type == BANK){    
+        if(cPlayer->isLoanActive == 1){
+            int repayAmount = wantToRepay(squares,cPlayer,econStatus);
+            if(repayAmount != 0){
+                switch(cPlayer->player){
+                    case AGGRESSIVE_INVESTOR:
+                        repayLoan(cPlayer,repayAmount);
+                        break;
+                    case CONSERVATIVE_BANKER:
+                        repayLoan(cPlayer,repayAmount);
+                        break;
+                    case RISK_TAKER:
+                        repayLoan(cPlayer,repayAmount);
+                        break;
+                    case OPPORTUNISTIC_TRADER:
+                        repayLoan(cPlayer,repayAmount);
+                        break;
+                }
+            }
+        }
+        if(isLoanNeeded(cPlayer,squares,econStatus) == 1){
+            obtainLoan(cPlayer,squares,cPlayer->money,econStatus);
+            cPlayer->isLoanActive = 1;
         }
     }
 }

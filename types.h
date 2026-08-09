@@ -107,6 +107,7 @@ typedef struct{
     int mortgageValue;
     int baseRental;
     MortgageStatus mortgageStatus;
+    LoanStatus isLocked;
     Player owner;
     char name[30];
 }Railway;
@@ -115,6 +116,7 @@ typedef struct{
     int purchasePrice;
     int mortgageValue;
     MortgageStatus mortgageStatus;
+    LoanStatus isLocked;
     Player owner;
     char name[40];
 }Utility;
@@ -186,6 +188,7 @@ typedef struct {
     int railwaysCount;
     int numberOfHotels;
     int jailedTurn;
+    int isLoanActive;
     Player player;
     Bankrupt isBankrupt;
     Jail inJail;
@@ -220,6 +223,10 @@ typedef struct {
     int currentLoanInterestRate; 
 } EconomicState;
 
+typedef struct {
+    int index;
+    int value;
+} MortgageItems;
 
 
 void initBoard(Square squares[],currentPlayer players[]);
@@ -250,11 +257,30 @@ int roundOff(double num);
 void applyInflation(Square squares[], EconomicState *econ, int newRate);
 int generateInflationRate();
 void printMarketCondition(EconomicState *econ);
+int getMaxRent(Square squares[],currentPlayer *cPlayer);
 
 void handleJail(Square *square, currentPlayer *player,currentStatus *status,EconomicState *econStatus);
+void handleBank(Square squares[],Square *square, currentPlayer *cPlayer,currentStatus *status,EconomicState *econStatus);
 void releaseFromJail(currentPlayer *currentPlayer);
 void checkAndReleaseFromJail(currentPlayer *currentPlayer,currentStatus *status);
 
 int getNetWorth(currentPlayer *player, Square squares[]);
+int getMaxLoanAmount(currentPlayer *player, Square squares[]);
+char* getSquareName(Square *square);
+int getOwnedItems(Square squares[], currentPlayer *current_player);
+
+int isLoanNeeded(currentPlayer *player, Square squares[], EconomicState *econStatus);
+void obtainLoan(currentPlayer *player, Square squares[], int amount, EconomicState *econ);
+void repayLoan(currentPlayer *player, int amount);
+void repayLoanFull(currentPlayer *player);
+void calLoanInterest(currentPlayer *player);
+void checkLoanDefault(currentPlayer *player, Square squares[]);
+int wantToRepay(Square squares[], currentPlayer *player, EconomicState *econ);
+void extendLoan(currentPlayer *player);
+
+
+
+
+
 
 #endif

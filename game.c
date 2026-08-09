@@ -217,8 +217,13 @@ void incrementRound(currentStatus *status,currentPlayer players[],Square squares
             minRounds = players[i].currentRound;
         }
     }
-    if(minRounds == status->rounds +1){
+    if(minRounds == status->rounds+2){
         status->rounds++;
+
+        for (int i = 0; i < 4; i++) {
+            checkLoanDefault(&players[i], squares);
+        }
+
         
         printf("==================================\n");
         printf("Round %d Summary\n", status->rounds);
@@ -230,11 +235,14 @@ void incrementRound(currentStatus *status,currentPlayer players[],Square squares
 
             printf("Player %d : %s \n", i+1, getPlayer(players[i]));
             printf("Cash : LKR %d.\n", players[i].money);        
-            printf("NetWorth : %d.\n", networth);
+            printf("NetWorth : LKR %d.\n", networth);
             printf("Properties : %d.\n", players[i].propertiesCount);
             printf("Hotels : %d.\n", players[i].numberOfHotels);
-            printf("Outstanding Loan : %d.\n", players[i].loanAmount);
+            printf("Outstanding Loan : LKR %d.\n", players[i].loanAmount);
             printf("--------------------------------\n");
+
+            calLoanInterest(&players[i]);
+            
     }
     printf("\n");
     }
@@ -257,7 +265,8 @@ void gameLoop(){
 
     applyInflation(squares, &econStatus, generateInflationRate());
     
-    while(status.rounds<=20 || (players[0].isBankrupt == BANKRUPT && players[1].isBankrupt == BANKRUPT && players[2].isBankrupt == BANKRUPT && players[3].isBankrupt == BANKRUPT)){
+    
+    while(status.rounds<30){
         prevRound = status.rounds;
         rollAndMove(players,squares,&status,&econStatus);
 

@@ -660,6 +660,20 @@ void initBoard(Square squares[],currentPlayer players[]){
             }
         }
     };
+
+    for(int i = 0; i<40; i++){
+        switch(squares[i].type){
+            case PROPERTY:
+                squares[i].data.property.isLocked = NOT_LOAN_LOCKED;
+                break;
+            case RAILWAY:
+                squares[i].data.railway.isLocked = NOT_LOAN_LOCKED;
+                break;
+            case UTILITY:
+                squares[i].data.utility.isLocked = NOT_LOAN_LOCKED;
+                break;
+        }
+    }
     
 
 }
@@ -690,19 +704,20 @@ void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status
         else{
             tmp_pos = players[i].position;
         }
-
+    
         handleJail(&squares[tmp_pos], &players[i],status,econStatus);
         
         if(players[i].inJail == NOTIN_JAIL){
             if(players[i].position > 39){
             passGO = 1;
             players[i].position = players[i].position - 40;
-             }
-
+            }
+           
             if(players[i].jailedTurn != status->turn){
             printf("%s moves from Square %d to Square %d.\n",getPlayer(players[i]),players[i].lastPosition,players[i].position);
+            handleBank(squares,&squares[tmp_pos],&players[i],status,econStatus);
             }
-            
+
             if(passGO){
               players[i].money += 2000;
               players[i].lastRound = players[i].currentRound;
@@ -726,4 +741,14 @@ void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status
 
     
     printf("\n");
+}
+char* getSquareName(Square *square){
+    switch(square->type){
+        case PROPERTY:
+            return square->data.property.name;
+        case RAILWAY:
+            return square->data.railway.name;
+        case UTILITY:
+            return square->data.utility.name;
+    }
 }

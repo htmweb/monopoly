@@ -119,6 +119,8 @@ int getMortgageValue(Square *square){
             return square->data.railway.mortgageValue;
         case UTILITY:
             return square->data.utility.mortgageValue;
+        default:
+            return 0;
     }
 }
 void obtainLoan(currentPlayer *player, Square squares[], int amount, EconomicState *econ){
@@ -131,7 +133,7 @@ void obtainLoan(currentPlayer *player, Square squares[], int amount, EconomicSta
 
     int requiredCollateralValue = roundOff(amount / 0.75);
 
-    MortgageItems mortgageItems[26];
+    MortgageItems mortgageItems[28];
     int count = 0;
 
     for (int i = 0; i < 40; i++) {
@@ -141,22 +143,25 @@ void obtainLoan(currentPlayer *player, Square squares[], int amount, EconomicSta
                     if(sq->data.property.isLocked == NOT_LOAN_LOCKED && sq->data.property.owner == player->player && sq->data.property.mortgageStatus == UNMORTGAGED){
                         mortgageItems[count].index = i;
                         mortgageItems[count].value = getMortgageValue(sq);
+                        count++;
                     }
                     break;
                 case RAILWAY:
                     if(sq->data.railway.isLocked == NOT_LOAN_LOCKED && sq->data.railway.owner == player->player && sq->data.railway.mortgageStatus == UNMORTGAGED){
                         mortgageItems[count].index = i;
                         mortgageItems[count].value = getMortgageValue(sq);
+                        count++;
                     }
                     break;
                 case UTILITY:
                     if(sq->data.utility.isLocked == NOT_LOAN_LOCKED && sq->data.utility.owner == player->player && sq->data.utility.mortgageStatus == UNMORTGAGED){
                         mortgageItems[count].index = i;
                         mortgageItems[count].value = getMortgageValue(sq);
+                        count++;
                     break;
          }
         
-        count++;
+        
     }
     }
 

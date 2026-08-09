@@ -665,12 +665,15 @@ void initBoard(Square squares[],currentPlayer players[]){
         switch(squares[i].type){
             case PROPERTY:
                 squares[i].data.property.isLocked = NOT_LOAN_LOCKED;
+                squares[i].data.property.mortgageValue = roundOff(squares[i].data.property.baseValue*0.5);
                 break;
             case RAILWAY:
                 squares[i].data.railway.isLocked = NOT_LOAN_LOCKED;
+                squares[i].data.railway.mortgageValue = roundOff(squares[i].data.railway.purchasePrice*0.5);
                 break;
             case UTILITY:
                 squares[i].data.utility.isLocked = NOT_LOAN_LOCKED;
+                squares[i].data.utility.mortgageValue = roundOff(squares[i].data.utility.purchasePrice*0.5);
                 break;
         }
     }

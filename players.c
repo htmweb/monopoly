@@ -21,7 +21,7 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .utilityCount = 0,
         .propertiesCount = 0,
         .railwaysCount = 0,
-        .isBankrupt = 0,
+        .isBankrupt = NOTBANKRUPT,
         .jailedTurn = -1,
         .inJail = NOTIN_JAIL,
         .isLoanActive = 0
@@ -40,7 +40,7 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .utilityCount = 0,
         .propertiesCount = 0,
         .railwaysCount = 0,
-        .isBankrupt = 0,
+        .isBankrupt = NOTBANKRUPT,
         .jailedTurn = -1,
         .inJail = NOTIN_JAIL,
         .isLoanActive = 0
@@ -58,7 +58,7 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .utilityCount = 0,
         .propertiesCount = 0,
         .railwaysCount = 0,
-        .isBankrupt = 0,
+        .isBankrupt = NOTBANKRUPT,
         .jailedTurn = -1,
         .inJail = NOTIN_JAIL,
         .isLoanActive = 0
@@ -76,7 +76,7 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .utilityCount = 0,
         .propertiesCount = 0,
         .railwaysCount = 0,
-        .isBankrupt = 0,
+        .isBankrupt = NOTBANKRUPT,
         .jailedTurn = -1,
         .inJail = NOTIN_JAIL,
         .isLoanActive = 0
@@ -210,7 +210,7 @@ void OPP_BIDDING(Auction *auction, currentPlayer *player,int player_index){
 }
 
 //rent calculation
-void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer *owner,currentPlayer *currentPlayer,Square *square){
+void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer *owner,currentPlayer *currentPlayer,Square squares[],Square *square){
     if(rent != 0){
            if(currentPlayer->money >= rent){
                currentPlayer->money -= rent;
@@ -221,12 +221,12 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                printf("Owner : %s.\n\n", getPlayer(*owner));
            }
            else{
-              
+              collectDebt(currentPlayer, owner, squares, rent);
            }
            
        }
 }
- void payRent(currentPlayer players[],currentPlayer *currentPlayer,Square *square,int playerIndex){
+ void payRent(currentPlayer players[],currentPlayer *currentPlayer,Square *square,int playerIndex,Square squares[]){
        int rent = 0;
        int ownerID = -1;
        Player owner;
@@ -268,7 +268,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                       rent = baseRent * 7;
                       break;
                 }
-                payRentAndPrint(rent,square->data.property.name,players,&players[ownerID],currentPlayer,square);
+                payRentAndPrint(rent,square->data.property.name,players,&players[ownerID],currentPlayer,squares,square);
                }
                
                break;
@@ -299,7 +299,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                             rent = 2000;
                             break;
                     }
-                    payRentAndPrint(rent,square->data.railway.name,players,&players[ownerID],currentPlayer,square);
+                    payRentAndPrint(rent,square->data.railway.name,players,&players[ownerID],currentPlayer,squares,square);
                 }
                 break;
 
@@ -323,7 +323,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                             rent = 10*currentPlayer->lastDieVal;
                         }
                        
-                        payRentAndPrint(rent,square->data.utility.name,players,&players[ownerID],currentPlayer,square);
+                        payRentAndPrint(rent,square->data.utility.name,players,&players[ownerID],currentPlayer,squares,square);
                         
                     }
                 }
@@ -364,6 +364,29 @@ int getOwnedItems(Square squares[], currentPlayer *current_player) {
         }
     }
     return items;
+}
+int getTotalPropertyValue(Square squares[], currentPlayer *current_player){
+    int value = 0;
+    for(int i=0; i<40; i++){
+        switch(squares[i].type){
+            case PROPERTY:
+                if(squares[i].data.property.owner == current_player->player && squares[i].data.property.mortgageStatus == UNMORTGAGED && squares[i].data.property.isLocked == NOT_LOAN_LOCKED){
+                    value += squares[i].data.property.purchasePrice;
+                }
+            break;
+            case RAILWAY:
+                if(squares[i].data.railway.owner == current_player->player && squares[i].data.railway.mortgageStatus == UNMORTGAGED && squares[i].data.railway.isLocked == NOT_LOAN_LOCKED){
+                    value += squares[i].data.railway.purchasePrice;
+                }
+            break;
+            case UTILITY:
+                if(squares[i].data.utility.owner == current_player->player && squares[i].data.utility.mortgageStatus == UNMORTGAGED && squares[i].data.utility.isLocked == NOT_LOAN_LOCKED){
+                    value += squares[i].data.utility.purchasePrice;
+                }
+            break;
+        }
+    }
+    return value;
 }
 void buyProperty(Square squares[], currentPlayer *current_player,int player_index,currentPlayer players[]){
     int current_pos = current_player->position;
@@ -672,3 +695,132 @@ void handleBank(Square squares[],Square *square, currentPlayer *cPlayer,currentS
 
 
 
+
+int countPropertiesInGroup(Square squares[], int groupID){
+    int count = 0;
+    for (int i = 0; i < 40; i++) {
+        if (squares[i].type == PROPERTY && squares[i].data.property.groupID == groupID) {
+            count++;
+        }
+    }
+    return count;
+}
+
+int countOwnedInGroup(Square squares[], Player player, int groupID){
+    int count = 0;
+    for (int i = 0; i < 40; i++) {
+        if (squares[i].type == PROPERTY && squares[i].data.property.groupID == groupID &&
+            squares[i].data.property.owner == player) {
+            count++;
+        }
+    }
+    return count;
+}
+
+int getMinHousesInGroup(Square squares[], Player player, int groupID){
+    int minHouses = 4;
+    for (int i = 0; i < 40; i++) {
+        if (squares[i].type == PROPERTY && squares[i].data.property.groupID == groupID &&
+            squares[i].data.property.owner == player) {
+            if (squares[i].data.property.numberOfHouses < minHouses) {
+                minHouses = squares[i].data.property.numberOfHouses;
+            }
+        }
+    }
+    return minHouses;
+}
+
+
+int canBuildHouse(Square squares[], currentPlayer *player, int index){
+    Property *property = &squares[index].data.property;
+
+    if(property->owner == player->player && property->mortgageStatus == UNMORTGAGED && property->numberOfHouses < 4 && property->numberOfHotels == 0){
+        if (countOwnedInGroup(squares, player->player, property->groupID) == countPropertiesInGroup(squares, property->groupID)){
+            if (property->numberOfHouses <= getMinHousesInGroup(squares, player->player, property->groupID)){
+                 return (player->money >= property->houseConstructionCost);
+            }
+        }
+    }  
+    return 0;
+}
+
+int canBuildHotel(Square squares[], currentPlayer *player, int index){
+    Property *property = &squares[index].data.property;
+
+    if(property->owner == player->player && property->mortgageStatus == UNMORTGAGED && property->numberOfHouses == 4 && property->numberOfHotels == 0){
+        if(countOwnedInGroup(squares, player->player, property->groupID) == countPropertiesInGroup(squares, property->groupID)){
+          return (player->money >= property->hotelConstructionCost);
+        }
+    }
+}
+
+void buildHouse(Square squares[], currentPlayer *player, int index){
+    Property *property = &squares[index].data.property;
+
+    player->money -= property->houseConstructionCost;
+    property->numberOfHouses++;
+    player->numberOfHouses++;
+
+    printf("%s constructed one house on %s.\n", getPlayer(*player), property->name);
+    printf("Construction Cost : LKR %d.\n\n", property->houseConstructionCost);
+}
+
+void buildHotel(Square squares[], currentPlayer *player, int index){
+    Property *property = &squares[index].data.property;
+
+    player->money -= property->hotelConstructionCost;
+    property->numberOfHouses = 0;
+    property->numberOfHotels = 1;
+    player->numberOfHotels++;
+
+    printf("%s upgraded %s to a Hotel.\n\n", getPlayer(*player), property->name);
+    
+}
+
+
+void handleConstruction(Square squares[], currentPlayer *player, EconomicState *econ){
+    int index = player->position;
+
+    if(squares[index].type == PROPERTY && squares[index].data.property.owner == player->player){
+
+    int wantsToBuild = 0;
+    switch (player->player) {
+        case AGGRESSIVE_INVESTOR:
+            wantsToBuild = 1;
+            break;
+
+        case CONSERVATIVE_BANKER:
+            wantsToBuild = 1;
+            break;
+
+        case RISK_TAKER:
+            wantsToBuild = 1;
+            break;
+
+        case OPPORTUNISTIC_TRADER: {
+            
+            int inflationLow = (econ->currentInflationRate <= 0);
+            int subsidyActive = (player->activeCardType == HOUSING_SUBSIDY);
+            wantsToBuild = (inflationLow || subsidyActive);
+            break;
+        }
+    }
+
+    if (wantsToBuild){
+        printf("Can build hotel or house? %d\n",canBuildHotel(squares, player, index));
+       
+        if (canBuildHotel(squares, player, index)){
+            if (player->player == CONSERVATIVE_BANKER && player->ownedLoan.isActive == 0) {
+                buildHotel(squares, player, index);
+                return;
+            }else if(player->player != CONSERVATIVE_BANKER){
+                buildHotel(squares, player, index);
+            }
+        }
+
+        if (canBuildHouse(squares, player, index)){
+            buildHouse(squares, player, index);
+        }
+    }
+}
+}

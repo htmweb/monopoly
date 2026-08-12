@@ -692,33 +692,35 @@ int roundOff(double num){
 
 
 void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status,EconomicState *econStatus){
-
+  
     for(int i = 0; i<4; i++){
-        int passGO = 0;
-        int tmp_pos = 0;
+        if(players[i].isBankrupt == NOTBANKRUPT && status->gameOver == NOT_GAME_OVER){
+            int passGO = 0;
+            int tmp_pos = 0;
 
-        checkAndReleaseFromJail(&players[i],status);
-
-        diceRoll(&players[i], squares);
-
-        if(players[i].position>39){
-            tmp_pos = players[i].position - 40;
-        }
-        else{
-            tmp_pos = players[i].position;
-        }
+            checkAndReleaseFromJail(&players[i],status);
+            checkWinner(players,status,squares);
+            
+            diceRoll(&players[i], squares);
+            
+            if(players[i].position>39){
+                tmp_pos = players[i].position - 40;
+            }
+            else{
+                tmp_pos = players[i].position;
+            }
     
-        handleJail(&squares[tmp_pos], &players[i],status,econStatus);
+            handleJail(&squares[tmp_pos], &players[i],status,econStatus);
         
-        if(players[i].inJail == NOTIN_JAIL){
-            if(players[i].position > 39){
-            passGO = 1;
-            players[i].position = players[i].position - 40;
+            if(players[i].inJail == NOTIN_JAIL){
+                if(players[i].position > 39){
+                passGO = 1;
+                players[i].position = players[i].position - 40;
             }
            
             if(players[i].jailedTurn != status->turn){
-            printf("%s moves from Square %d to Square %d.\n",getPlayer(players[i]),players[i].lastPosition,players[i].position);
-            handleBank(squares,&squares[tmp_pos],&players[i],status,econStatus);
+                printf("%s moves from Square %d to Square %d.\n",getPlayer(players[i]),players[i].lastPosition,players[i].position);
+                handleBank(squares,&squares[tmp_pos],&players[i],status,econStatus);
             }
 
             if(passGO){
@@ -736,11 +738,14 @@ void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status
             int current_player_position = players[i].position;
 
             buy(squares,&players[i],i,players);
-            payRent(players,&players[i],&squares[current_player_position],i);
+            handleConstruction(squares,&players[i],econStatus);
+            payRent(players,&players[i],&squares[current_player_position],i,squares);
+            checkBankrupt(&players[i],squares);
         }
 
-       
     }
+    }
+
 
     
     printf("\n");

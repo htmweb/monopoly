@@ -71,6 +71,24 @@ typedef enum{
     FREE_PARKING
 }SpecialType;
 
+typedef enum{
+    ECONOMIC_BOOM,
+    STABLE_ECONOMY,
+    MODERATE_INFLATION,
+    HIGH_INFLATION,
+    ECONOMIC_RECESSION
+}EconStatus;
+
+typedef enum{
+    HOUSING_SUBSIDY,
+    GOVERNMENT_BOND
+}activeCardType;
+
+typedef enum{
+    NOT_GAME_OVER,
+    GAME_OVER
+}isGameOver;
+//to be
 
 typedef struct{
     Player player;
@@ -189,9 +207,11 @@ typedef struct {
     int numberOfHotels;
     int jailedTurn;
     int isLoanActive;
+    int numberOfHouses;
     Player player;
     Bankrupt isBankrupt;
     Jail inJail;
+    activeCardType activeCardType;
 
 }currentPlayer;
 
@@ -216,9 +236,11 @@ typedef struct {
 typedef struct{
     int rounds;
     int turn;
+    isGameOver gameOver;
 }currentStatus;
 
 typedef struct {
+    EconStatus econStatus;
     int currentInflationRate;  
     int currentLoanInterestRate; 
 } EconomicState;
@@ -238,8 +260,7 @@ char* getPlayer(currentPlayer player);
 void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status,EconomicState *econStatus);
 
 int getMaxRent(Square squares[],currentPlayer *cPlayer);
-void payRent(currentPlayer players[],currentPlayer *currentPlayer,Square *square,int index);
-void bankRupt(currentPlayer *player);
+void payRent(currentPlayer players[],currentPlayer *currentPlayer,Square *square,int index,Square squares[]);
 
 
 void buyProperty(Square squares[], currentPlayer *current_player,int player_index,currentPlayer players[]);
@@ -269,6 +290,7 @@ int getMaxLoanAmount(currentPlayer *player, Square squares[]);
 char* getSquareName(Square *square);
 int getOwnedItems(Square squares[], currentPlayer *current_player);
 
+void setLoanInterestRate(EconomicState *econ);
 int isLoanNeeded(currentPlayer *player, Square squares[], EconomicState *econStatus);
 void obtainLoan(currentPlayer *player, Square squares[], int amount, EconomicState *econ);
 void repayLoan(currentPlayer *player, int amount);
@@ -279,8 +301,25 @@ int wantToRepay(Square squares[], currentPlayer *player, EconomicState *econ);
 void extendLoan(currentPlayer *player);
 
 
+int countPropertiesInGroup(Square squares[], int groupID);
+int countOwnedInGroup(Square squares[], Player player, int groupID);
+int getMinHousesInGroup(Square squares[], Player player, int groupID);
+int canBuildHouse(Square squares[], currentPlayer *player, int index);
+int canBuildHotel(Square squares[], currentPlayer *player, int index);
+void buildHouse(Square squares[], currentPlayer *player, int index);
+void buildHotel(Square squares[], currentPlayer *player, int index);
+void handleConstruction(Square squares[], currentPlayer *player, EconomicState *econ);
 
+void checkBankrupt(currentPlayer *player, Square squares[]);
+void bankRupt(currentPlayer *player, Square squares[]);
 
+int canAffordDebt(currentPlayer *player, Square squares[], int amount);
+void raiseCashByMortgaging(currentPlayer *player, Square squares[], int neededAmount);
+void collectDebt(currentPlayer *player, currentPlayer *creditor, Square squares[], int amount);
 
+void checkWinner(currentPlayer players[],currentStatus *status,Square squares[]);
+void gameDraw(currentPlayer players[],Square squares[],currentStatus *status);
 
+int getTotalPropertyValue(Square squares[], currentPlayer *current_player);
+void printWinnerAndExit(currentPlayer *winner, Square squares[]);
 #endif

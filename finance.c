@@ -219,7 +219,7 @@ void repayLoan(currentPlayer *player, int amount) {
     player->loanAmount = player->ownedLoan.loanAmount;
 
     printf("%s repaid LKR %d.\n", getPlayer(*player), amount);
-    printf("Outstanding Balance : LKR %d.\n\n", player->ownedLoan.loanAmount);
+    printf("Outstanding Loan Balance : LKR %d.\n\n", player->ownedLoan.loanAmount);
 
     if (player->ownedLoan.loanAmount == 0) {
         player->ownedLoan.isActive = 0;
@@ -260,12 +260,20 @@ void checkLoanDefault(currentPlayer *player, Square squares[]) {
             Square *sq = &squares[player->ownedLoan.collateralIndices[i]];
             switch (sq->type) {
             case PROPERTY:
+            {
+                int lostHouses = sq->data.property.numberOfHouses;
+                int lostHotels = sq->data.property.numberOfHotels;
+
                 sq->data.property.owner = -1;
                 sq->data.property.numberOfHouses = 0;
                 sq->data.property.numberOfHotels = 0;
                 sq->data.property.insuranceStatus = UNINSURED;
                 sq->data.property.mortgageStatus = UNMORTGAGED;
+
                 player->propertiesCount--;
+                player->numberOfHouses -= lostHouses;
+                player->numberOfHotels -= lostHotels;
+            }
                 break;
             case RAILWAY:
                 sq->data.railway.owner = -1;
@@ -355,4 +363,203 @@ void extendLoan(currentPlayer *player){
     player->ownedLoan.roundsRemaining = 20;
     printf("%s extended the loan period.\n", getPlayer(*player));
     printf("New Duration : 20 Rounds\n\n");
+}
+void setLoanInterestRate(EconomicState *econ){
+    int rate = 0;
+    int inflationRate = econ->currentInflationRate;
+    if (inflationRate < 0) {
+        rate = 5;
+        econ->econStatus = ECONOMIC_BOOM;
+    } else if (inflationRate <= 2) {
+        rate = 8;
+        econ->econStatus = STABLE_ECONOMY;
+    } else if (inflationRate <= 5) {
+        rate = 10;
+        econ->econStatus = MODERATE_INFLATION;
+    } else if (inflationRate <= 8) {
+        rate = 12;
+        econ->econStatus = HIGH_INFLATION;
+    } else {
+        rate = 15;
+        econ->econStatus = ECONOMIC_RECESSION;
+    }
+
+    econ->currentLoanInterestRate = rate;
+}
+
+int canAffordDebt(currentPlayer *player, Square squares[], int amount) {
+    int totalMortgageValue = 0;
+    for (int i = 0; i < 40; i++) {
+        Square *sq = &squares[i];
+        switch (sq->type) {
+            case PROPERTY:
+                if (sq->data.property.owner == player->player &&
+                    sq->data.property.mortgageStatus == UNMORTGAGED &&
+                    sq->data.property.isLocked == NOT_LOAN_LOCKED) {
+                    totalMortgageValue += sq->data.property.mortgageValue;
+                }
+                break;
+            case RAILWAY:
+                if (sq->data.railway.owner == player->player &&
+                    sq->data.railway.mortgageStatus == UNMORTGAGED &&
+                    sq->data.railway.isLocked == NOT_LOAN_LOCKED) {
+                    totalMortgageValue += sq->data.railway.mortgageValue;
+                }
+                break;
+            case UTILITY:
+                if (sq->data.utility.owner == player->player &&
+                    sq->data.utility.mortgageStatus == UNMORTGAGED &&
+                    sq->data.utility.isLocked == NOT_LOAN_LOCKED) {
+                    totalMortgageValue += sq->data.utility.mortgageValue;
+                }
+                break;
+        }
+    }
+    return (player->money + totalMortgageValue) >= amount;
+}
+
+void raiseCashByMortgaging(currentPlayer *player, Square squares[], int neededAmount) {
+    MortgageItems items[28];
+    int count = 0;
+
+    for (int i = 0; i < 40; i++) {
+        Square *sq = &squares[i];
+        switch (sq->type) {
+            case PROPERTY:
+                if (sq->data.property.owner == player->player &&
+                    sq->data.property.mortgageStatus == UNMORTGAGED &&
+                    sq->data.property.isLocked == NOT_LOAN_LOCKED) {
+                    items[count].index = i;
+                    items[count].value = sq->data.property.mortgageValue;
+                    count++;
+                }
+                break;
+            case RAILWAY:
+                if (sq->data.railway.owner == player->player &&
+                    sq->data.railway.mortgageStatus == UNMORTGAGED &&
+                    sq->data.railway.isLocked == NOT_LOAN_LOCKED) {
+                    items[count].index = i;
+                    items[count].value = sq->data.railway.mortgageValue;
+                    count++;
+                }
+                break;
+            case UTILITY:
+                if (sq->data.utility.owner == player->player &&
+                    sq->data.utility.mortgageStatus == UNMORTGAGED &&
+                    sq->data.utility.isLocked == NOT_LOAN_LOCKED) {
+                    items[count].index = i;
+                    items[count].value = sq->data.utility.mortgageValue;
+                    count++;
+                }
+                break;
+        }
+    }
+
+    for (int i = 1; i < count; i++) {
+        MortgageItems key = items[i];
+        int j = i - 1;
+        while (j >= 0 && items[j].value > key.value) {
+            items[j + 1] = items[j];
+            j--;
+        }
+        items[j + 1] = key;
+    }
+
+    int raised = 0;
+    for (int i = 0; i < count && raised < neededAmount; i++) {
+        Square *sq = &squares[items[i].index];
+        switch (sq->type) {
+            case PROPERTY: sq->data.property.mortgageStatus = MORTGAGED; break;
+            case RAILWAY:  sq->data.railway.mortgageStatus  = MORTGAGED; break;
+            case UTILITY:  sq->data.utility.mortgageStatus  = MORTGAGED; break;
+        }
+        player->money += items[i].value;
+        raised += items[i].value;
+        printf("%s mortgaged %s for LKR %d.\n", getPlayer(*player), getSquareName(sq), items[i].value);
+    }
+    printf("\n");
+}
+
+void collectDebt(currentPlayer *player, currentPlayer *creditor, Square squares[], int amount) {
+    if (player->money >= amount) {
+        player->money -= amount;
+        if (creditor != NULL){
+             creditor->money += amount;
+        }
+        return;
+    }
+
+    if (canAffordDebt(player, squares, amount)){
+        raiseCashByMortgaging(player, squares, amount - player->money);
+        player->money -= amount;
+        if (creditor != NULL){
+            creditor->money += amount;
+        }
+    } else {
+        bankRupt(player, squares);
+    }
+}
+
+
+void checkBankrupt(currentPlayer *player, Square squares[]){
+    if(player->isBankrupt == NOTBANKRUPT){
+        int netWorth = getNetWorth(player, squares);
+        if (netWorth <= 0) {            
+            bankRupt(player, squares);
+        }
+}
+}
+
+void bankRupt(currentPlayer *player, Square squares[]) {
+    
+    if(player->isBankrupt == NOTBANKRUPT){
+    printf("%s has been declared bankrupt.\n", getPlayer(*player));
+    
+    for (int i = 0; i < 40; i++) {
+        Square *sq = &squares[i];
+        switch (sq->type) {
+            case PROPERTY:
+                if (sq->data.property.owner == player->player) {
+                    sq->data.property.numberOfHouses = 0;
+                    sq->data.property.numberOfHotels = 0;
+                    sq->data.property.insuranceStatus = UNINSURED;
+                    sq->data.property.mortgageStatus = UNMORTGAGED;
+                    sq->data.property.owner = -1;
+                }
+                break;
+            case RAILWAY:
+                if (sq->data.railway.owner == player->player) {
+                    sq->data.railway.mortgageStatus = UNMORTGAGED;
+                    sq->data.railway.owner = -1;
+                }
+                break;
+            case UTILITY:
+                if (sq->data.utility.owner == player->player) {
+                    sq->data.utility.mortgageStatus = UNMORTGAGED;
+                    sq->data.utility.owner = -1;
+                }
+                break;
+        }
+    }
+
+    player->propertiesCount = 0;
+    player->railwaysCount = 0;
+    player->utilityCount = 0;
+    player->numberOfHouses = 0;
+    player->numberOfHotels = 0;
+
+    player->ownedLoan.isActive = 0;
+    player->ownedLoan.loanAmount = 0;
+    player->ownedLoan.collateralCount = 0;
+    player->loanAmount = 0;
+    player->isLoanActive = 0;
+
+    player->money = 0;
+    player->isBankrupt = BANKRUPT;
+
+    printf("Remaining assets transferred to the Bank.\n\n");
+    
+
+
+}
 }

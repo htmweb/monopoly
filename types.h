@@ -76,19 +76,53 @@ typedef enum{
     STABLE_ECONOMY,
     MODERATE_INFLATION,
     HIGH_INFLATION,
-    ECONOMIC_RECESSION
 }EconStatus;
-
-typedef enum{
-    HOUSING_SUBSIDY,
-    GOVERNMENT_BOND
-}activeCardType;
 
 typedef enum{
     NOT_GAME_OVER,
     GAME_OVER
 }isGameOver;
-//to be
+
+typedef enum{
+    TOURISM_HYPE,
+    FUEL_SHORTAGE,
+    HEAVY_FLOODS,
+    POLITICAL_RALLY,
+    STOCK_MARKET_RISE, 
+    ECONOMIC_DOWNTURN, 
+    HOUSING_SUBSIDY, 
+    INTEREST_RATE_CUT,
+    INTEREST_RATE_INCREASE, 
+    TAX_AMNESTY, 
+    POWER_FAILURE, 
+    FOREIGN_FUNDING,
+    PORT_EXPANSION, 
+    FESTIVAL_SEASON, 
+    LABOUR_STRIKE, 
+    INSURANCE_DISCOUNT,
+    PROPERTY_REVALUATION,
+    CURRENCY_DEPRECIATION, 
+    GOVERNMENT_GRANT, 
+    NATIONAL_DISASTER
+    
+}activeNationalCardType;
+
+typedef enum{
+    TOURISM_BOOM,
+    FUEL_CRISIS,
+    HEAVY_MONSOON,
+    ECONOMIC_RECESSION,
+    STOCK_MARKET_BOOM,
+    GOVERNMENT_HOUSING_PROGRAMME,
+    FOREIGN_INVESTMENT,
+    POLITICAL_UNREST
+}economicEvents;
+
+typedef enum{
+    UNINSURED_DISASTER_HAPPENED,
+    NOT_DISASTER_HAPPENED,
+    INSURED_DISASTER_HAPPENED
+}FinancialLoss;
 
 typedef struct{
     Player player;
@@ -99,6 +133,8 @@ typedef struct{
     int amount;
     int premium;
     int compensation;
+    int roundsRemaining;
+    int isActive;
     InsuranceType type;
     DisasterType disasters[5];
 }Insurance;
@@ -115,10 +151,16 @@ typedef struct{
     int numberOfHouses;
     int numberOfHotels;
     int groupID;
+    int closedUntilRound;
+    int isDamaged;
+    int repairCost;
+    int insuranceId;
     Player owner;
     char name[30];
     LoanStatus isLocked;
 }Property;
+
+
 
 typedef struct{
     int purchasePrice;
@@ -185,15 +227,14 @@ typedef struct {
 } Square;
 
 typedef struct {
-    Property ownedProperties[22];
-    Railway ownedRailways[4];
-    Utility ownedUtilities[2];
-}Owned;
+    int roundsRemaining;
+    activeNationalCardType type;
+}ActiveNationalEvent;
 
 typedef struct {
-    Owned ownedItems;
     Loan ownedLoan;
     Insurance ownedInsurance[22];
+    ActiveNationalEvent activeNationalEvents[20];
     int lastPosition;
     int loanAmount;
     int position;
@@ -208,11 +249,12 @@ typedef struct {
     int jailedTurn;
     int isLoanActive;
     int numberOfHouses;
+    FinancialLoss financialLoss;
     Player player;
     Bankrupt isBankrupt;
     Jail inJail;
-    activeCardType activeCardType;
-
+    activeNationalCardType activeNationalCardType;
+    
 }currentPlayer;
 
 typedef struct {
@@ -243,6 +285,7 @@ typedef struct {
     EconStatus econStatus;
     int currentInflationRate;  
     int currentLoanInterestRate; 
+    economicEvents activeEconomicEvent;
 } EconomicState;
 
 typedef struct {
@@ -250,6 +293,10 @@ typedef struct {
     int value;
 } MortgageItems;
 
+typedef struct {
+    char name[30];
+    activeNationalCardType type;
+}NationalEvent;
 
 void initBoard(Square squares[],currentPlayer players[]);
 void initPlayers(Square squares[],currentPlayer players[]);
@@ -295,7 +342,7 @@ int isLoanNeeded(currentPlayer *player, Square squares[], EconomicState *econSta
 void obtainLoan(currentPlayer *player, Square squares[], int amount, EconomicState *econ);
 void repayLoan(currentPlayer *player, int amount);
 void repayLoanFull(currentPlayer *player);
-void calLoanInterest(currentPlayer *player);
+void calLoanInterest(currentPlayer *player,Square squares[]);
 void checkLoanDefault(currentPlayer *player, Square squares[]);
 int wantToRepay(Square squares[], currentPlayer *player, EconomicState *econ);
 void extendLoan(currentPlayer *player);
@@ -310,6 +357,7 @@ void buildHouse(Square squares[], currentPlayer *player, int index);
 void buildHotel(Square squares[], currentPlayer *player, int index);
 void handleConstruction(Square squares[], currentPlayer *player, EconomicState *econ);
 
+void checkPlayerBankrupt(currentPlayer players[], Square squares[]);
 void checkBankrupt(currentPlayer *player, Square squares[]);
 void bankRupt(currentPlayer *player, Square squares[]);
 
@@ -322,4 +370,16 @@ void gameDraw(currentPlayer players[],Square squares[],currentStatus *status);
 
 int getTotalPropertyValue(Square squares[], currentPlayer *current_player);
 void printWinnerAndExit(currentPlayer *winner, Square squares[]);
+
+void initNationalEvents(NationalEvent nationalEvents[]);
+void initEconomicEvents(economicEvents econEvents[]);
+void triggerEconomicEvent(EconomicState *econ, Square squares[], economicEvents econEvents[]);
+
+void purchaseInsurance(Square squares[], currentPlayer *player, int propertyIndex, InsuranceType type);
+void checkInsuranceExpiry(currentPlayer players[], Square squares[]);
+void triggerDisaster(currentPlayer players[], Square squares[],DisasterType disasters[]);
+void repairDamagedProperties(currentPlayer players[], Square squares[]);
+int decideInsuranceType(currentPlayer *player, Square squares[], int propertyIndex);
+void handleInsurancePurchase(Square squares[], currentPlayer *player);
+
 #endif

@@ -140,10 +140,12 @@ void startAuction(Square *square, currentPlayer players[]){
     Auction auction;
 
     auction.square = *square;
+
     auction.AGGRESSIVE_INVESTOR_BID = purchasePrice;
     auction.CONSERVATIVE_BANKER_BID = purchasePrice;
-    auction.RISK_TAKER_BID = -1;//auction.square.data.property.purchasePrice;
-    auction.OPPORTUNISTIC_TRADER_BID = -1;//auction.square.data.property.purchasePrice;
+    auction.RISK_TAKER_BID = purchasePrice;
+    auction.OPPORTUNISTIC_TRADER_BID = purchasePrice;
+
     auction.currentBid = roundOff(purchasePrice * 0.5);
     auction.status = 1;
 
@@ -196,24 +198,24 @@ void startAuction(Square *square, currentPlayer players[]){
                 case PROPERTY:
                     square->data.property.owner = winner;
                     players[winnerIndex].propertiesCount++;
-                    printf("%s won the auction for %s with a bid of LKR %d.\n",
-                    getPlayer(players[winnerIndex]), square->data.property.name, auction.currentBid);
+                    printf("\n%s wins the auction.\n",
+                    getPlayer(players[winnerIndex]));
                 break;
                 case RAILWAY:
                     square->data.railway.owner = winner;
                     players[winnerIndex].railwaysCount++;
-                    printf("%s won the auction for %s with a bid of LKR %d.\n",
-                    getPlayer(players[winnerIndex]), square->data.railway.name, auction.currentBid);
+                    printf("\n%s wins the auction.\n",
+                    getPlayer(players[winnerIndex]));
                 break;
                 case UTILITY:
                     square->data.utility.owner = winner;
                     players[winnerIndex].utilityCount++;
-                    printf("%s won the auction for %s with a bid of LKR %d.\n",
-                    getPlayer(players[winnerIndex]), square->data.utility.name, auction.currentBid);
+                    printf("\n%s wins the auction.\n",
+                    getPlayer(players[winnerIndex]), square->data.utility.name);
                 break;
             }
 
-        printf("Auction Ended.\n");
+        printf("\nAuction Ended.\n\n");
         players[winnerIndex].money -= auction.currentBid;
         }
 
@@ -230,6 +232,8 @@ void initStatus(currentStatus *status){
 void incrementRound(currentStatus *status,currentPlayer players[],Square squares[]){
     int offset = 0;
     int minRounds = 1;
+    checkPlayerBankrupt(players,squares);
+
     for(int i=0; i<=4; i++){
         if(players[i].inJail == NOTIN_JAIL && players[i].isBankrupt == NOTBANKRUPT){
             minRounds = players[i].currentRound;
@@ -243,10 +247,17 @@ void incrementRound(currentStatus *status,currentPlayer players[],Square squares
         }
     }
     if(minRounds >= status->rounds+2 && status->gameOver == NOT_GAME_OVER){
+        
         status->rounds++;
+
+        checkInsuranceExpiry(players, squares);
+
+        
+        
 
         for (int i = 0; i < 4; i++) {
             checkLoanDefault(&players[i], squares);
+            calLoanInterest(&players[i],squares);
         }
 
         
@@ -255,8 +266,6 @@ void incrementRound(currentStatus *status,currentPlayer players[],Square squares
         printf("==================================\n");
 
         for(int i = 0; i<4; i++){
-
-            calLoanInterest(&players[i]);
             int networth = getNetWorth(&players[i], squares);
             printf("Player %d : %s \n", i+1, getPlayer(players[i]));
             printf("Cash : LKR %d.\n", players[i].money);        
@@ -324,33 +333,48 @@ void gameLoop(){
     currentPlayer players[4];
     currentStatus status;
     EconomicState econStatus;
+    NationalEvent nationalEvents[20];
+    economicEvents econEvents[8];
+    DisasterType disasters[] = {FIRE, FLOOD, RIOT, BUILDING_COLLAPSE, ELECTRICAL_FAILURE};
+
     status.gameOver = NOT_GAME_OVER;
 
     initStatus(&status);
+    initNationalEvents(nationalEvents);
+    initEconomicEvents(econEvents);
     initBoard(squares,players);
     initPlayers(squares,players);
-    setOrder(players, squares);
+    setOrder(players,squares);
 
 
     int prevRound = 0;
 
-
-    applyInflation(squares, &econStatus, generateInflationRate());
+    triggerEconomicEvent(&econStatus,squares,econEvents);
+    triggerDisaster(players,squares,disasters);
+    applyInflation(squares,&econStatus,generateInflationRate());
     setLoanInterestRate(&econStatus);
     
     
     while(status.rounds<500 && status.gameOver == NOT_GAME_OVER){
+            if(prevRound != status.rounds && status.rounds % 10 == 0){
+                applyInflation(squares,&econStatus, generateInflationRate());
+                triggerDisaster(players,squares,disasters);
+            }
             prevRound = status.rounds;
 
             setLoanInterestRate(&econStatus);
             rollAndMove(players,squares,&status,&econStatus);
-
+            
             incrementRound(&status,players,squares);
 
             if(prevRound != status.rounds && status.rounds % 10 == 0){
-                applyInflation(squares, &econStatus, generateInflationRate());
                 printMarketCondition(&econStatus);
+                
             }
+            if(prevRound != status.rounds && status.rounds % 15 == 0){
+                triggerEconomicEvent(&econStatus,squares,econEvents);
+            }
+            
             status.turn++;
         
         

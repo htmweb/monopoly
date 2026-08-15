@@ -240,13 +240,15 @@ void repayLoanFull(currentPlayer *player) {
     }
 }
 
-void calLoanInterest(currentPlayer *player) {
+void calLoanInterest(currentPlayer *player,Square squares[]) {
     if (player->ownedLoan.isActive == 1) {
 
         int interest = roundOff(player->ownedLoan.loanAmount * (player->ownedLoan.interestRate / 100.0));
         player->ownedLoan.loanAmount += interest;
         player->loanAmount = player->ownedLoan.loanAmount;
         player->ownedLoan.roundsRemaining--;
+
+        checkBankrupt(player,squares);
 
     }
 }
@@ -469,13 +471,20 @@ void raiseCashByMortgaging(currentPlayer *player, Square squares[], int neededAm
     for (int i = 0; i < count && raised < neededAmount; i++) {
         Square *sq = &squares[items[i].index];
         switch (sq->type) {
-            case PROPERTY: sq->data.property.mortgageStatus = MORTGAGED; break;
-            case RAILWAY:  sq->data.railway.mortgageStatus  = MORTGAGED; break;
-            case UTILITY:  sq->data.utility.mortgageStatus  = MORTGAGED; break;
+            case PROPERTY:
+                 sq->data.property.mortgageStatus = MORTGAGED;
+                 sq->data.property.owner = -1;
+                 break;
+            case RAILWAY:
+                 sq->data.railway.mortgageStatus  = MORTGAGED;
+                 break;
+            case UTILITY: 
+                 sq->data.utility.mortgageStatus  = MORTGAGED;
+                 break;
         }
         player->money += items[i].value;
         raised += items[i].value;
-        printf("%s mortgaged %s for LKR %d.\n", getPlayer(*player), getSquareName(sq), items[i].value);
+        printf("%s sold to bank %s for LKR %d.\n", getPlayer(*player), getSquareName(sq), items[i].value);
     }
     printf("\n");
 }
@@ -508,6 +517,12 @@ void checkBankrupt(currentPlayer *player, Square squares[]){
             bankRupt(player, squares);
         }
 }
+}
+
+void checkPlayerBankrupt(currentPlayer players[], Square squares[]){
+    for(int i = 0; i<4; i++){
+        checkBankrupt(&players[i],squares);
+    }
 }
 
 void bankRupt(currentPlayer *player, Square squares[]) {
@@ -559,7 +574,260 @@ void bankRupt(currentPlayer *player, Square squares[]) {
 
     printf("Remaining assets transferred to the Bank.\n\n");
     
-
-
 }
+}
+
+int getPropertyInsuranceIndex(Square squares[], int squareIndex){
+    int id = 0;
+    for(int i = 0; i < squareIndex; i++){
+        if(squares[i].type == PROPERTY){
+            id++;
+        }
+    }
+    return id;
+}
+
+void purchaseInsurance(Square squares[], currentPlayer *player,int propertyIndex,InsuranceType type){
+
+    Square *sq = &squares[propertyIndex];
+
+    if(sq->type == PROPERTY && sq->data.property.owner == player->player){
+
+    if(type == BUSINESS_INTERRUPTION && sq->data.property.numberOfHotels == 1){
+        return;
+    }
+
+    int propertyValue = sq->data.property.baseValue;
+    int premium = 0;
+    int compensation = 0;
+
+    switch(type){
+        case BASIC_PROPERTY:
+            premium = roundOff(propertyValue * 0.05);
+            compensation = 80;
+            break;
+        case COMPREHENSIVE:
+            premium = roundOff(propertyValue * 0.10);
+            compensation = 100;
+            break;
+        case BUSINESS_INTERRUPTION:
+            premium = roundOff(propertyValue * 0.15);
+            compensation = 100;
+            break;
+    }
+
+    if(player->money >= premium){
+        player->money -= premium;
+        sq->data.property.insuranceStatus = INSURED;
+
+        int id = getPropertyInsuranceIndex(squares, propertyIndex);
+        player->ownedInsurance[id].amount = propertyValue;
+        player->ownedInsurance[id].premium = premium;
+        player->ownedInsurance[id].compensation = compensation;
+        player->ownedInsurance[id].type = type;
+        player->ownedInsurance[id].roundsRemaining = 20;
+        player->ownedInsurance[id].isActive = 1;
+        switch(type){
+            case BASIC_PROPERTY:
+                printf("Basic Property Insurance purchased.\n");
+                break;
+            case COMPREHENSIVE:
+                printf("Comprehensive Insurance purchased.\n");
+                break;
+            case BUSINESS_INTERRUPTION:
+                printf("Business Interruption Insurance purchased.\n");
+                break;
+        }
+        printf("Property : %s\n", sq->data.property.name);
+        printf("Premium : LKR %d.\n\n", premium);
+    }
+ }
+}
+
+void checkInsuranceExpiry(currentPlayer players[], Square squares[]){
+    for(int k = 0; k < 4; k++){
+        currentPlayer *currentPlayer = &players[k];
+        
+        for(int i = 0; i < 40; i++){
+            if(squares[i].type == PROPERTY && squares[i].data.property.owner == currentPlayer->player && squares[i].data.property.insuranceStatus == INSURED){
+
+            int id = getPropertyInsuranceIndex(squares, i);
+            Insurance *policy = &currentPlayer->ownedInsurance[id];
+
+            if(policy->isActive == 1){
+                policy->roundsRemaining--;
+
+                if(policy->roundsRemaining == 3){
+                    printf("Insurance Expiry\n\n");
+                    printf("Insurance policy on %s expires in 3 rounds.\n\n", squares[i].data.property.name);
+                }
+
+                if(policy->roundsRemaining <= 0){
+                    policy->isActive = 0;
+                    squares[i].data.property.insuranceStatus = UNINSURED;
+
+                    printf("Insurance Expiry\n\n");
+                    printf("Insurance policy on %s has expired.\n\n", squares[i].data.property.name);
+                }
+            }
+        }
+    }
+  }
+}
+
+void triggerDisaster(currentPlayer players[], Square squares[],DisasterType disasters[]){
+    
+    DisasterType disaster = disasters[rand() % 5];
+
+    int developedIndices[22];
+    int count = 0;
+
+    for(int i = 0; i < 40; i++){
+        if(squares[i].type == PROPERTY && (squares[i].data.property.numberOfHouses > 0 || squares[i].data.property.numberOfHotels > 0)){
+            developedIndices[count] = i;
+            count++;
+        }
+    }
+
+    if(count > 0){
+        int targetIndex = developedIndices[rand() % count];
+        Square *sq = &squares[targetIndex];
+        Property *property = &sq->data.property;
+
+        int repairCost = roundOff(property->baseValue * 0.2);
+        printf("Disaster\n");
+        switch(disaster){
+            case FIRE:
+                printf("\nFire occurred.\n");               
+                break;
+            case FLOOD:              
+                printf("\nFlood occurred.\n");              
+                break;
+            case RIOT:               
+                printf("\nRiot occurred.\n");               
+                break;
+            case BUILDING_COLLAPSE:  
+                printf("\nBuilding Collapse occurred.\n");  
+                break;
+            case ELECTRICAL_FAILURE: 
+                printf("\nElectrical Failure occurred.\n"); 
+                break;
+        }
+        printf("\nAffected Property :\n%s\n\n", property->name);
+
+        currentPlayer *owner = NULL;
+        for(int p = 0; p < 4; p++){
+            if(players[p].player == property->owner){
+                owner = &players[p];
+                break;
+            }
+        }
+
+        if(owner != NULL){
+
+            if(property->insuranceStatus == INSURED){
+                int id = property->insuranceId;
+                Insurance *policy = &owner->ownedInsurance[id];
+
+                int compensation = roundOff(repairCost * (policy->compensation / 100.0));
+                owner->money += compensation;
+
+                property->isDamaged = 0; 
+                property->repairCost = 0;
+
+                printf("Insurance Claim Approved.\n\n");
+                printf("Compensation Paid :\nLKR %d.\n\n", compensation);
+
+                if(policy->type == BUSINESS_INTERRUPTION && property->numberOfHotels > 0){
+                    int lostRent = property->baseRental * 5;
+                    owner->money += lostRent;
+                    printf("Business Interruption : Lost rental income for 5 rounds compensated.\n");
+                    printf("Lost Rent Paid :\nLKR %d.\n\n", lostRent);
+                }
+            }
+            else{
+                property->isDamaged = 1;
+                property->repairCost = repairCost;
+                owner->financialLoss = UNINSURED_DISASTER_HAPPENED;
+                printf("Property uninsured. Owner bears full repair cost of LKR %d.\n\n", repairCost);
+            }
+        }
+    }
+}
+
+void repairDamagedProperties(currentPlayer players[], Square squares[]){
+    for(int p = 0; p < 4; p++){
+        currentPlayer *currentPlayer = &players[p];
+
+        for(int i = 0; i < 40; i++){
+            if(squares[i].type == PROPERTY && squares[i].data.property.owner == currentPlayer->player){
+                Property *property = &squares[i].data.property;
+                
+                if(property->isDamaged == 1 && property->repairCost > 0 && currentPlayer->money >= property->repairCost){
+                    int cost = property->repairCost;
+                    currentPlayer->money -= cost;
+                    property->isDamaged = 0;
+                    property->repairCost = 0;
+
+                    printf("Repairs Completed\n\n");
+                    printf("%s has been repaired.\n", property->name);
+                    printf("Repair Cost : LKR %d.\n\n", cost);
+                }
+
+                
+            }
+        }
+    }
+}
+
+int decideInsuranceType(currentPlayer *player, Square squares[], int propertyIndex){
+    Square *sq = &squares[propertyIndex];
+
+    if(sq->type == PROPERTY && sq->data.property.owner == player->player){
+        Property *property = &sq->data.property;
+        int isDeveloped = (property->numberOfHouses > 0 || property->numberOfHotels > 0);
+
+        if(property->insuranceStatus == INSURED || isDeveloped == 0){
+            return -1;
+        }
+
+        switch(player->player){
+            case AGGRESSIVE_INVESTOR:
+                if(property->numberOfHotels > 0){
+                    return COMPREHENSIVE;
+                }
+                return BASIC_PROPERTY;
+
+            case CONSERVATIVE_BANKER:
+                return COMPREHENSIVE;
+
+            case RISK_TAKER:
+                if(player->financialLoss == UNINSURED_DISASTER_HAPPENED){
+                    return BASIC_PROPERTY;
+                }
+                return -1;
+
+            case OPPORTUNISTIC_TRADER:
+                if(property->baseValue >= 5000){ 
+                    return COMPREHENSIVE;
+                }
+                return -1;
+        }
+    }
+
+
+    return -1;
+}
+
+void handleInsurancePurchase(Square squares[], currentPlayer *player){
+    if(squares[player->position].type == INSURANCE){
+        printf("current position: %d\n", player->position);
+        for(int i = 0; i < 40; i++){
+            int type = decideInsuranceType(player, squares, i);
+
+            if(type != -1){
+                purchaseInsurance(squares, player, i, type);
+            }
+        }
+    }
 }

@@ -692,7 +692,7 @@ int roundOff(double num){
 
 
 void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status,EconomicState *econStatus){
-  
+    checkPlayerBankrupt(players,squares);
     for(int i = 0; i<4; i++){
         if(players[i].isBankrupt == NOTBANKRUPT && status->gameOver == NOT_GAME_OVER){
             int passGO = 0;
@@ -702,7 +702,7 @@ void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status
             checkWinner(players,status,squares);
             
             diceRoll(&players[i], squares);
-            
+
             if(players[i].position>39){
                 tmp_pos = players[i].position - 40;
             }
@@ -737,10 +737,13 @@ void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status
         
             int current_player_position = players[i].position;
 
-            buy(squares,&players[i],i,players);
-            handleConstruction(squares,&players[i],econStatus);
             payRent(players,&players[i],&squares[current_player_position],i,squares);
+            buy(squares,&players[i],i,players);
+            handleInsurancePurchase(squares,&players[i]);
+            handleConstruction(squares,&players[i],econStatus);
+            repairDamagedProperties(players, squares);
             checkBankrupt(&players[i],squares);
+            
         }
 
     }

@@ -9,7 +9,6 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
     srand(0);
 
     players[0] = (currentPlayer){
-        .ownedItems = {},
         .player = AGGRESSIVE_INVESTOR,
         .ownedInsurance = {},
         .lastPosition = 0,
@@ -28,7 +27,6 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
 
     };
     players[1] = (currentPlayer){
-        .ownedItems = {},
         .player = CONSERVATIVE_BANKER,
         .ownedInsurance = {},
         .lastPosition = 0,
@@ -46,7 +44,6 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .isLoanActive = 0
     };
     players[2] = (currentPlayer){
-        .ownedItems = {},
         .player = RISK_TAKER,
         .ownedInsurance = {},
         .lastPosition = 0,
@@ -64,7 +61,6 @@ void initPlayers(Square squares[40],currentPlayer players[4]){
         .isLoanActive = 0
     };
     players[3] = (currentPlayer){
-        .ownedItems = {},
         .player = OPPORTUNISTIC_TRADER,
         .ownedInsurance = {},
         .lastPosition = 0,
@@ -108,9 +104,9 @@ char* getPlayer(currentPlayer cPlayer){
 void diceRoll(currentPlayer *player, Square squares[]){
     int dice1 = 0;
     int dice2 = 0;
-
+    
     int same_val = 1;
-
+    
     while(same_val == 1){
         dice1 = rand() % 6 + 1;
         dice2 = rand() % 6 + 1;
@@ -140,18 +136,14 @@ void diceRoll(currentPlayer *player, Square squares[]){
 
         }
 
-        if(player->inJail == NOTIN_JAIL){
-            printf("%s rolls %d. \n", getPlayer(*player), dice1+dice2);
-        }
-        
-        
-    
         
     }
+    if(player->inJail == NOTIN_JAIL){
+            printf("%s rolls %d. \n", getPlayer(*player), dice1+dice2);
+    }
 }
-//bidding logics for players
+
 void AGG_BIDDING(Auction *auction, currentPlayer *player,int player_index){
-    //check whether if property,...
     if(auction->AGGRESSIVE_INVESTOR_BID != -1 && auction->lastBidder == AGGRESSIVE_INVESTOR){
         if(auction->RISK_TAKER_BID == -1 && auction->OPPORTUNISTIC_TRADER_BID == -1 && auction->CONSERVATIVE_BANKER_BID == -1){
             printf("%s bids won LKR %d.\n", getPlayer(*player), auction->AGGRESSIVE_INVESTOR_BID);
@@ -163,10 +155,11 @@ void AGG_BIDDING(Auction *auction, currentPlayer *player,int player_index){
             auction->AGGRESSIVE_INVESTOR_BID = auction->currentBid + BID_VAL;
             auction->currentBid = auction->currentBid + BID_VAL;
             auction->lastBidder = AGGRESSIVE_INVESTOR;
-            printf("%s bids LKR %d.\n", getPlayer(*player), auction->AGGRESSIVE_INVESTOR_BID);
+            printf("%s bids LKR %d.\n\n", getPlayer(*player), auction->AGGRESSIVE_INVESTOR_BID);
         }
         else{
             auction->AGGRESSIVE_INVESTOR_BID = -1;
+            printf("%s withdraws.\n", getPlayer(*player));
         }
     }
     
@@ -179,37 +172,73 @@ void AGG_BIDDING(Auction *auction, currentPlayer *player,int player_index){
 void CON_BIDDING(Auction *auction, currentPlayer *player,int player_index){
     if(auction->CONSERVATIVE_BANKER_BID != -1 && auction->lastBidder == CONSERVATIVE_BANKER){
         if(auction->RISK_TAKER_BID == -1 && auction->OPPORTUNISTIC_TRADER_BID == -1 && auction->AGGRESSIVE_INVESTOR_BID == -1){
-            printf("%s bids won LKR %d.\n", getPlayer(*player), auction->CONSERVATIVE_BANKER_BID);
             auction->status = 0;
         }
     }
 
-    else if((auction->currentBid)+BID_VAL <= auction->square.data.property.purchasePrice * 1.2){
+    else if((auction->currentBid)+BID_VAL <= auction->square.data.property.purchasePrice){
         if((auction->currentBid)+BID_VAL <= player->money){
             auction->CONSERVATIVE_BANKER_BID = auction->currentBid + BID_VAL;
             auction->currentBid = auction->currentBid + BID_VAL;
             auction->lastBidder = CONSERVATIVE_BANKER;
 
-            printf("%s place bids LKR %d.\n", getPlayer(*player), auction->CONSERVATIVE_BANKER_BID);
+            printf("%s place bids LKR %d.\n\n", getPlayer(*player), auction->CONSERVATIVE_BANKER_BID);
         }
         else{
             auction->CONSERVATIVE_BANKER_BID = -1;
+            printf("%s withdraws.\n", getPlayer(*player));
         }
     }
     else{
         auction->CONSERVATIVE_BANKER_BID = -1;
+        printf("%s withdraws.\n", getPlayer(*player));
     }
 }
 void RISK_BIDDING(Auction *auction, currentPlayer *player,int player_index){
-    //DUMMY
+    if(auction->RISK_TAKER_BID != -1 && auction->lastBidder == RISK_TAKER){
+        if(auction->AGGRESSIVE_INVESTOR_BID == -1 && auction->CONSERVATIVE_BANKER_BID == -1 && auction->OPPORTUNISTIC_TRADER_BID == -1){
+            auction->status = 0;
+        }
+    }
+    else if((auction->currentBid) + BID_VAL <= player->money){
+        auction->RISK_TAKER_BID = auction->currentBid + BID_VAL;
+        auction->currentBid = auction->currentBid + BID_VAL;
+        auction->lastBidder = RISK_TAKER;
+        printf("%s bids LKR %d.\n\n", getPlayer(*player), auction->RISK_TAKER_BID);
+    }
+    else{
+        auction->RISK_TAKER_BID = -1;
+        printf("%s withdraws.\n", getPlayer(*player));
+    }
     
 }
 void OPP_BIDDING(Auction *auction, currentPlayer *player,int player_index){
-    //DUMMY
+
+    if(auction->OPPORTUNISTIC_TRADER_BID != -1 && auction->lastBidder == OPPORTUNISTIC_TRADER){
+        if(auction->AGGRESSIVE_INVESTOR_BID == -1 && auction->CONSERVATIVE_BANKER_BID == -1 && auction->RISK_TAKER_BID == -1){
+            auction->status = 0;
+        }
+    }
+    else if((auction->currentBid) + BID_VAL <= auction->square.data.property.purchasePrice || auction->square.data.property.purchasePrice < auction->square.data.property.baseValue){
+        if((auction->currentBid) + BID_VAL <= player->money){
+            auction->OPPORTUNISTIC_TRADER_BID = auction->currentBid + BID_VAL;
+            auction->currentBid = auction->currentBid + BID_VAL;
+            auction->lastBidder = OPPORTUNISTIC_TRADER;
+            printf("%s bids LKR %d.\n\n", getPlayer(*player), auction->OPPORTUNISTIC_TRADER_BID);
+        }
+        else{
+            auction->OPPORTUNISTIC_TRADER_BID = -1;
+            printf("%s withdraws.\n", getPlayer(*player));
+        }
+    }
+    else{
+        auction->OPPORTUNISTIC_TRADER_BID = -1;
+        printf("%s withdraws.\n", getPlayer(*player));
+    }
     
 }
 
-//rent calculation
+
 void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer *owner,currentPlayer *currentPlayer,Square squares[],Square *square){
     if(rent != 0){
            if(currentPlayer->money >= rent){
@@ -223,6 +252,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
            else{
               collectDebt(currentPlayer, owner, squares, rent);
            }
+           checkBankrupt(currentPlayer,squares);
            
        }
 }
@@ -233,7 +263,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
 
        switch(square->type){
            case PROPERTY:
-               if(square->data.property.owner != players[playerIndex].player  && square->data.property.mortgageStatus == UNMORTGAGED && square->data.property.owner != -1){
+               if(square->data.property.owner != players[playerIndex].player  && square->data.property.mortgageStatus == UNMORTGAGED && square->data.property.owner != -1 && square->data.property.isDamaged == 0){
                 int baseRent = square->data.property.baseRental;
                 int houses = square->data.property.numberOfHouses;
                 int hotels = square->data.property.numberOfHotels;
@@ -249,7 +279,6 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                 
                 if(hotels == 1){
                     rent = 10*baseRent;
-                    break;
                 }
                 switch(houses){
                     case 0:
@@ -686,7 +715,7 @@ void handleBank(Square squares[],Square *square, currentPlayer *cPlayer,currentS
                 }
             }
         }
-        if(isLoanNeeded(cPlayer,squares,econStatus) == 1){
+        else if(isLoanNeeded(cPlayer,squares,econStatus) == 1){
             obtainLoan(cPlayer,squares,cPlayer->money,econStatus);
             cPlayer->isLoanActive = 1;
         }
@@ -800,15 +829,13 @@ void handleConstruction(Square squares[], currentPlayer *player, EconomicState *
         case OPPORTUNISTIC_TRADER: {
             
             int inflationLow = (econ->currentInflationRate <= 0);
-            int subsidyActive = (player->activeCardType == HOUSING_SUBSIDY);
+            int subsidyActive = (player->activeNationalCardType == HOUSING_SUBSIDY);
             wantsToBuild = (inflationLow || subsidyActive);
             break;
         }
     }
 
-    if (wantsToBuild){
-        printf("Can build hotel or house? %d\n",canBuildHotel(squares, player, index));
-       
+    if (wantsToBuild){       
         if (canBuildHotel(squares, player, index)){
             if (player->player == CONSERVATIVE_BANKER && player->ownedLoan.isActive == 0) {
                 buildHotel(squares, player, index);

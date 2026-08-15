@@ -821,7 +821,6 @@ int decideInsuranceType(currentPlayer *player, Square squares[], int propertyInd
 
 void handleInsurancePurchase(Square squares[], currentPlayer *player){
     if(squares[player->position].type == INSURANCE){
-        printf("current position: %d\n", player->position);
         for(int i = 0; i < 40; i++){
             int type = decideInsuranceType(player, squares, i);
 

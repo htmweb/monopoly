@@ -488,7 +488,7 @@ void buyRailway(Square squares[], currentPlayer *current_player,int player_index
 
     switch(current_player->player){
         case AGGRESSIVE_INVESTOR:
-            if(squares[current_pos].data.property.mortgageStatus == UNMORTGAGED){
+            if(squares[current_pos].data.railway.mortgageStatus == UNMORTGAGED){
                 if(squares[current_pos].data.railway.owner == -1){
                     int remain = current_player->money - squares[current_pos].data.railway.purchasePrice;
                     int maxRentSqID = -1;
@@ -538,7 +538,7 @@ void buyRailway(Square squares[], currentPlayer *current_player,int player_index
         break;
 
         case RISK_TAKER:
-             if(squares[current_pos].data.property.mortgageStatus == UNMORTGAGED){
+             if(squares[current_pos].data.railway.mortgageStatus == UNMORTGAGED){
                 if(squares[current_pos].data.railway.owner == -1){
                     int remain = current_player->money - squares[current_pos].data.railway.purchasePrice;
 
@@ -781,6 +781,7 @@ int canBuildHotel(Square squares[], currentPlayer *player, int index){
           return (player->money >= property->hotelConstructionCost);
         }
     }
+    return 0;
 }
 
 void buildHouse(Square squares[], currentPlayer *player, int index){

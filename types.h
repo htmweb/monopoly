@@ -57,7 +57,9 @@ typedef enum {
     FLOOD,
     RIOT,
     BUILDING_COLLAPSE,
-    ELECTRICAL_FAILURE
+    ELECTRICAL_FAILURE,
+    EARTH_QUAKE,
+    VANDALISM
 }DisasterType;
 
 typedef enum{

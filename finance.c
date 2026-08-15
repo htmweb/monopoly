@@ -597,7 +597,7 @@ void purchaseInsurance(Square squares[], currentPlayer *player,int propertyIndex
         return;
     }
 
-    int propertyValue = sq->data.property.baseValue;
+    int propertyValue = sq->data.property.purchasePrice;
     int premium = 0;
     int compensation = 0;
 
@@ -627,6 +627,8 @@ void purchaseInsurance(Square squares[], currentPlayer *player,int propertyIndex
         player->ownedInsurance[id].type = type;
         player->ownedInsurance[id].roundsRemaining = 20;
         player->ownedInsurance[id].isActive = 1;
+        sq->data.property.insuranceId = id;
+
         switch(type){
             case BASIC_PROPERTY:
                 printf("Basic Property Insurance purchased.\n");
@@ -665,6 +667,7 @@ void checkInsuranceExpiry(currentPlayer players[], Square squares[]){
                 if(policy->roundsRemaining <= 0){
                     policy->isActive = 0;
                     squares[i].data.property.insuranceStatus = UNINSURED;
+                    squares[i].data.property.insuranceId = -1;
 
                     printf("Insurance Expiry\n\n");
                     printf("Insurance policy on %s has expired.\n\n", squares[i].data.property.name);
@@ -677,7 +680,7 @@ void checkInsuranceExpiry(currentPlayer players[], Square squares[]){
 
 void triggerDisaster(currentPlayer players[], Square squares[],DisasterType disasters[]){
     
-    DisasterType disaster = disasters[rand() % 5];
+    DisasterType disaster = disasters[rand() % 7];
 
     int developedIndices[22];
     int count = 0;
@@ -694,17 +697,17 @@ void triggerDisaster(currentPlayer players[], Square squares[],DisasterType disa
         Square *sq = &squares[targetIndex];
         Property *property = &sq->data.property;
 
-        int repairCost = roundOff(property->baseValue * 0.2);
+        int repairCost = roundOff(sq->data.property.purchasePrice*0.1);
         printf("Disaster\n");
         switch(disaster){
             case FIRE:
-                printf("\nFire occurred.\n");               
+                printf("\nFire occurred.\n");
                 break;
             case FLOOD:              
-                printf("\nFlood occurred.\n");              
+                printf("\nFlood occurred.\n");
                 break;
             case RIOT:               
-                printf("\nRiot occurred.\n");               
+                printf("\nRiot occurred.\n");
                 break;
             case BUILDING_COLLAPSE:  
                 printf("\nBuilding Collapse occurred.\n");  
@@ -712,6 +715,12 @@ void triggerDisaster(currentPlayer players[], Square squares[],DisasterType disa
             case ELECTRICAL_FAILURE: 
                 printf("\nElectrical Failure occurred.\n"); 
                 break;
+            case EARTH_QUAKE:
+                printf("\nEarthquake occurred.\n");
+                break;
+            case VANDALISM:
+                printf("\nVandalism occurred.\n");
+            
         }
         printf("\nAffected Property :\n%s\n\n", property->name);
 
@@ -729,16 +738,43 @@ void triggerDisaster(currentPlayer players[], Square squares[],DisasterType disa
                 int id = property->insuranceId;
                 Insurance *policy = &owner->ownedInsurance[id];
 
-                int compensation = roundOff(repairCost * (policy->compensation / 100.0));
-                owner->money += compensation;
+                int compensation = roundOff(repairCost * (policy->compensation / 100.0));;
 
-                property->isDamaged = 0; 
-                property->repairCost = 0;
+                int cantClaim = 0;
 
-                printf("Insurance Claim Approved.\n\n");
-                printf("Compensation Paid :\nLKR %d.\n\n", compensation);
+                switch (policy->type){
+                    case BASIC_PROPERTY:
+                        if(disaster != FIRE && disaster != FLOOD){
+                            cantClaim = 1;
+                        }
+                    break;
+                    case COMPREHENSIVE:
+                        if(disaster != FIRE && disaster != FLOOD && disaster != RIOT && disaster != VANDALISM && disaster != EARTH_QUAKE){
+                            cantClaim = 1;
+                        }
+                    break;
+                    
+                }
+            
+                if(cantClaim == 1){
+                    property->isDamaged = 1;
+                    property->repairCost = repairCost;
+                    owner->financialLoss = INSURED_DISASTER_HAPPENED;
+                    printf("Property is damaged. Insurance cannot claim this type of disaster.\n");
+                    printf("Repair Cost : LKR %d.\n\n", repairCost);
+                }
+                else{
+                    owner->money += compensation;
+
+                    property->isDamaged = 0; 
+                    property->repairCost = 0;
+
+                    printf("Insurance Claim Approved.\n\n");
+                    printf("Compensation Paid :\nLKR %d.\n\n", compensation);
+                }
 
                 if(policy->type == BUSINESS_INTERRUPTION && property->numberOfHotels > 0){
+                    compensation = roundOff(repairCost * (policy->compensation / 100.0));
                     int lostRent = property->baseRental * 5;
                     owner->money += lostRent;
                     printf("Business Interruption : Lost rental income for 5 rounds compensated.\n");

@@ -335,7 +335,7 @@ void gameLoop(){
     EconomicState econStatus;
     NationalEvent nationalEvents[20];
     economicEvents econEvents[8];
-    DisasterType disasters[] = {FIRE, FLOOD, RIOT, BUILDING_COLLAPSE, ELECTRICAL_FAILURE};
+    DisasterType disasters[] = {FIRE, FLOOD, RIOT, BUILDING_COLLAPSE, ELECTRICAL_FAILURE, EARTH_QUAKE,VANDALISM};
 
     status.gameOver = NOT_GAME_OVER;
 

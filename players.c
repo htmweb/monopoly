@@ -6,7 +6,7 @@
 const int BID_VAL = 250;
 
 void initPlayers(Square squares[40],currentPlayer players[4]){
-    srand(0);
+    srand(1);
 
     players[0] = (currentPlayer){
         .player = AGGRESSIVE_INVESTOR,

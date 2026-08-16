@@ -211,8 +211,7 @@ void startAuction(Square *square, currentPlayer players[]){
                 case UTILITY:
                     square->data.utility.owner = winner;
                     players[winnerIndex].utilityCount++;
-                    printf("\n%s wins the auction.\n",
-                    getPlayer(players[winnerIndex]), square->data.utility.name);
+                    printf("\n%s wins the auction.\n",getPlayer(players[winnerIndex]));
                 break;
             }
 
@@ -346,7 +345,7 @@ void initEconStatus(EconomicState *econStatus){
     econStatus->maxUndevelopedProperties = -1;
 }
 void gameLoop(){
-    srand(1000);
+    srand(1);
     Square squares[40];
     currentPlayer players[4];
     currentStatus status;

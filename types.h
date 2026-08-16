@@ -391,7 +391,7 @@ void checkBankrupt(currentPlayer *player, Square squares[]);
 void bankRupt(currentPlayer *player, Square squares[]);
 
 int canAffordDebt(currentPlayer *player, Square squares[], int amount);
-void raiseCashByMortgaging(currentPlayer *player, Square squares[], int neededAmount);
+void raiseCashBySell(currentPlayer *player, Square squares[], int neededAmount);
 void collectDebt(currentPlayer *player, currentPlayer *creditor, Square squares[], int amount);
 
 void checkWinner(currentPlayer players[],currentStatus *status,Square squares[]);

@@ -445,7 +445,7 @@ int canAffordDebt(currentPlayer *player, Square squares[], int amount) {
     return (player->money + totalMortgageValue) >= amount;
 }
 
-void raiseCashByMortgaging(currentPlayer *player, Square squares[], int neededAmount) {
+void raiseCashBySell(currentPlayer *player, Square squares[], int neededAmount) {
     MortgageItems items[28];
     int count = 0;
 
@@ -535,7 +535,7 @@ void collectDebt(currentPlayer *player, currentPlayer *creditor, Square squares[
     }
 
     if(canAffordDebt(player, squares, amount)){
-        raiseCashByMortgaging(player, squares, amount - player->money);
+        raiseCashBySell(player, squares, amount - player->money);
             player->money -= amount;
             if (creditor != NULL){
                 creditor->money += amount;

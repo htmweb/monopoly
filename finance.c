@@ -244,6 +244,7 @@ void repayLoan(currentPlayer *player, Square squares[], int amount) {
 
                 player->ownedLoan.isActive = 0;
                 player->isLoanActive = 0;
+                player->isLoanActive = 0;
                 player->ownedLoan.collateralCount = 0;
                 
                 printf("%s has fully repaid the loan. Collateral released.\n\n", getPlayer(*player));

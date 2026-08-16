@@ -161,7 +161,7 @@ void AGG_BIDDING(Auction *auction, currentPlayer *player,int player_index){
             auction->status = 0;
         }
     }
-    else if(auction->currentBid+BID_VAL <= auction->currentBid+BID_VAL <= getPurchasePrice(&auction->square) * 1.2){
+    else if(auction->currentBid+BID_VAL <= getPurchasePrice(&auction->square) * 1.2){
         if((auction->currentBid)+BID_VAL <= player->money){
             auction->AGGRESSIVE_INVESTOR_BID = auction->currentBid + BID_VAL;
             auction->currentBid = auction->currentBid + BID_VAL;

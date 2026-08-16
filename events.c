@@ -403,7 +403,7 @@ void triggerNationalEvent(currentPlayer *player, currentPlayer players[], Square
             int count = 0;
             for(int i = 0; i < 4; i++){
                 if(players[i].isBankrupt == NOTBANKRUPT){
-                    ids[count] = i;   // pack sequentially into ids[count], not ids[i]
+                    ids[count] = i; 
                     count++;
                 }
             }
@@ -427,7 +427,6 @@ void triggerNationalEvent(currentPlayer *player, currentPlayer players[], Square
             if(count > 0){
                 Property *property = &squares[candidates[rand() % count]].data.property;
                 int repairCost = roundOff((property->purchasePrice) * 0.1);
-                printf("property price %d: ",property->purchasePrice);
                 property->isDamaged = 1;
                 property->repairCost = repairCost;
                 printf("%s damaged. Repair Cost : LKR %d.\n\n", property->name, repairCost);

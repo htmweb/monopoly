@@ -341,6 +341,8 @@ void buyProperty(Square squares[], currentPlayer *current_player,int player_inde
 void buyRailway(Square squares[], currentPlayer *current_player,int player_index,currentPlayer players[]);
 void buy(Square squares[], currentPlayer *current_player,int player_index,currentPlayer players[]);
 
+int getPurchasePrice(Square *square);
+
 void startAuction(Square *square, currentPlayer players[]);
 void AGG_BIDDING(Auction *auction, currentPlayer *player,int index);
 void CON_BIDDING(Auction *auction, currentPlayer *player,int index);

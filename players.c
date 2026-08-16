@@ -141,6 +141,19 @@ void diceRoll(currentPlayer *player, Square squares[]){
     }
 }
 
+int getPurchasePrice(Square *square){
+    switch(square->type){
+        case PROPERTY: 
+            return square->data.property.purchasePrice;
+        case RAILWAY:
+            return square->data.railway.purchasePrice;
+        case UTILITY:  
+            return square->data.utility.purchasePrice;
+        default:
+            return 0;
+    }
+}
+
 void AGG_BIDDING(Auction *auction, currentPlayer *player,int player_index){
     if(auction->AGGRESSIVE_INVESTOR_BID != -1 && auction->lastBidder == AGGRESSIVE_INVESTOR){
         if(auction->RISK_TAKER_BID == -1 && auction->OPPORTUNISTIC_TRADER_BID == -1 && auction->CONSERVATIVE_BANKER_BID == -1){
@@ -148,7 +161,7 @@ void AGG_BIDDING(Auction *auction, currentPlayer *player,int player_index){
             auction->status = 0;
         }
     }
-    else if(auction->currentBid+BID_VAL <= auction->square.data.property.purchasePrice * 1.2){
+    else if(auction->currentBid+BID_VAL <= auction->currentBid+BID_VAL <= getPurchasePrice(&auction->square) * 1.2){
         if((auction->currentBid)+BID_VAL <= player->money){
             auction->AGGRESSIVE_INVESTOR_BID = auction->currentBid + BID_VAL;
             auction->currentBid = auction->currentBid + BID_VAL;
@@ -185,7 +198,7 @@ void CON_BIDDING(Auction *auction, currentPlayer *player,int player_index){
         }
     }
 
-    else if((auction->currentBid)+BID_VAL <= auction->square.data.property.purchasePrice){
+    else if((auction->currentBid)+BID_VAL <= getPurchasePrice(&auction->square)){
         if((auction->currentBid)+BID_VAL <= player->money){
             auction->CONSERVATIVE_BANKER_BID = auction->currentBid + BID_VAL;
             auction->currentBid = auction->currentBid + BID_VAL;
@@ -228,7 +241,7 @@ void OPP_BIDDING(Auction *auction, currentPlayer *player,int player_index){
             auction->status = 0;
         }
     }
-    else if((auction->currentBid) + BID_VAL <= auction->square.data.property.purchasePrice || auction->square.data.property.purchasePrice < auction->square.data.property.baseValue){
+    else if((auction->currentBid) + BID_VAL <= getPurchasePrice(&auction->square) ||(auction->square.type == PROPERTY && auction->square.data.property.purchasePrice < auction->square.data.property.baseValue)){
         if((auction->currentBid) + BID_VAL <= player->money){
             auction->OPPORTUNISTIC_TRADER_BID = auction->currentBid + BID_VAL;
             auction->currentBid = auction->currentBid + BID_VAL;
@@ -745,7 +758,6 @@ void buyUtility(Square squares[], currentPlayer *current_player,int player_index
 }
 void buy(Square squares[], currentPlayer *current_player,int player_index,currentPlayer players[]){
     int current_pos = current_player->position;
-    //property buying logic
     switch(squares[current_pos].type){
         case PROPERTY:
             buyProperty(squares,current_player,player_index,players);

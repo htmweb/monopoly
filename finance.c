@@ -326,9 +326,7 @@ void checkLoanDefault(currentPlayer *player, Square squares[]) {
 
 int isLoanNeeded(currentPlayer *player, Square squares[], EconomicState *econStatus) {
     switch (player->player) {
-        case AGGRESSIVE_INVESTOR:
-            printf("Max loan amount : %d\n", getMaxLoanAmount(player, squares));
-            
+        case AGGRESSIVE_INVESTOR:            
             if((getMaxLoanAmount(player, squares) >= squares[3].data.property.houseConstructionCost)){
                 return 1;
             }
@@ -364,8 +362,11 @@ int wantToRepay(Square squares[], currentPlayer *player, EconomicState *econ) {
             }
             break;
         case CONSERVATIVE_BANKER:
-            if(player->money >= 0){
-                return player->money;
+            if(player->money >= player->ownedLoan.loanAmount + getMaxRent(squares, player)){
+                return player->ownedLoan.loanAmount; 
+            }
+            else if(player->money > roundOff(player->ownedLoan.loanAmount/2.0)){
+                return roundOff(player->ownedLoan.loanAmount/2.0);
             }
             break;
         case RISK_TAKER:
@@ -632,7 +633,7 @@ void purchaseInsurance(Square squares[], currentPlayer *player,int propertyIndex
 
     if(sq->type == PROPERTY && sq->data.property.owner == player->player){
 
-    if(type == BUSINESS_INTERRUPTION && sq->data.property.numberOfHotels == 1){
+    if(type == BUSINESS_INTERRUPTION && sq->data.property.numberOfHotels == 0){
         return;
     }
 

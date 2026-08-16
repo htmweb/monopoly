@@ -160,7 +160,7 @@ void AGG_BIDDING(Auction *auction, currentPlayer *player,int player_index){
             printf("%s withdraws.\n", getPlayer(*player));
         }
     }
-    else if(auction->square.type == PROPERTY && auction->square.data.property.owner == -1 && auction->square.data.property.mortgageStatus == UNMORTGAGED && (auction->square.data.property.groupID = 6 || auction->square.data.property.groupID == 8)){
+    else if(auction->square.type == PROPERTY && auction->square.data.property.owner == -1 && auction->square.data.property.mortgageStatus == UNMORTGAGED && (auction->square.data.property.groupID == 6 || auction->square.data.property.groupID == 8)){
         if((auction->currentBid)+BID_VAL <= player->money){
             auction->AGGRESSIVE_INVESTOR_BID = auction->currentBid + BID_VAL;
             auction->currentBid = auction->currentBid + BID_VAL;

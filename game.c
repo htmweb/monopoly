@@ -148,6 +148,7 @@ void startAuction(Square *square, currentPlayer players[]){
 
     auction.currentBid = roundOff(purchasePrice * 0.5);
     auction.status = 1;
+    auction.lastBidder = -1;
 
     printf("Opening Bid : \n");
     printf("LKR %d\n\n",auction.currentBid);
@@ -345,7 +346,7 @@ void initEconStatus(EconomicState *econStatus){
     econStatus->maxUndevelopedProperties = -1;
 }
 void gameLoop(){
-    srand(1);
+    srand(5);
     Square squares[40];
     currentPlayer players[4];
     currentStatus status;

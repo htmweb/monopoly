@@ -532,13 +532,15 @@ void collectDebt(currentPlayer *player, currentPlayer *creditor, Square squares[
         return;
     }
 
-    if (canAffordDebt(player, squares, amount)){
+    if(canAffordDebt(player, squares, amount)){
         raiseCashByMortgaging(player, squares, amount - player->money);
-        player->money -= amount;
-        if (creditor != NULL){
-            creditor->money += amount;
-        }
-    } else {
+            player->money -= amount;
+            if (creditor != NULL){
+                creditor->money += amount;
+            }
+    }
+        
+    else{
         bankRupt(player, squares);
     }
 }

@@ -296,8 +296,9 @@ void triggerNationalEvent(currentPlayer *player, currentPlayer players[], Square
 
         case ECONOMIC_DOWNTURN:
             printf("Property values decrease by 15%%.\n\n");
-            for(int i = 0; i < 40; i++)
+            for(int i = 0; i < 40; i++){
                 if(squares[i].type == PROPERTY) squares[i].data.property.baseValue = roundOff((squares[i].data.property.baseValue) * 0.85);
+            }
             duration = 15;
             break;
 

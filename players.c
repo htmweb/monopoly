@@ -288,7 +288,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
 
                 int tourismHyperCard = hasActiveNationalEvent(&players[ownerIndex], TOURISM_HYPE);
                 int festivalCard = hasActiveNationalEvent(&players[ownerIndex],FESTIVAL_SEASON);
-                int hotelRentFactor = 1;
+                double hotelRentFactor = 1;
                 if(tourismHyperCard == 1){
                     hotelRentFactor += econ->hotelIncomeBoost;
                     if(hotelRentFactor <=0){
@@ -339,7 +339,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                     int baseRent = square->data.railway.baseRental;
                     
                     owner = square->data.railway.owner;
-                    int rentFactor = 1;
+                    double rentFactor = 1;
                     int ownerIndex = -1;
                     for(int i=0; i<4; i++){
                         if(players[i].player == square->data.property.owner){
@@ -483,10 +483,11 @@ void buyProperty(Square squares[], currentPlayer *current_player,int player_inde
                         printf("%s purchases %s for LKR %d.\n", getPlayer(*current_player), squares[current_pos].data.property.name, squares[current_pos].data.property.purchasePrice);
                         printf("Remaining Balance : LKR %d.\n\n", current_player->money);
                     }
+                
+                else{
+                    startAuction(&squares[current_pos], players);
                 }
-        else{
-            startAuction(&squares[current_pos], players);
-        }
+            }
     
     }
         break;
@@ -904,6 +905,7 @@ void buildHotel(Square squares[], currentPlayer *player, int index){
     Property *property = &squares[index].data.property;
 
     player->money -= property->hotelConstructionCost;
+    player->numberOfHouses -= property->numberOfHouses;
     property->numberOfHouses = 0;
     property->numberOfHotels = 1;
     player->numberOfHotels++;

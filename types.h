@@ -296,12 +296,12 @@ typedef struct{
 }currentStatus;
 
 typedef struct {
+    double utilityIncome;
+    double hotelIncomeBoost;
+    double railwayValueIncrement;
     int currentInflationRate;  
     int currentLoanInterestRate;
-    int utilityIncome;
-    int hotelIncomeBoost;
     int constructionSuspended;
-    int railwayValueIncrement;
     int insurancePremiumDiscount;
     int regulationActive;                        
     int regulationRoundsRemaining;               

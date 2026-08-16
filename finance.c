@@ -51,7 +51,7 @@ int getNetWorth(currentPlayer *player, Square squares[]) {
         switch (sq->type) {
             case PROPERTY:
                 if (sq->data.property.owner == player->player) {
-                    netWorth += sq->data.property.baseValue;
+                    netWorth += sq->data.property.purchasePrice;
                     netWorth += sq->data.property.numberOfHouses * sq->data.property.houseConstructionCost;
                     netWorth += sq->data.property.numberOfHotels * sq->data.property.hotelConstructionCost;
                 }

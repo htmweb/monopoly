@@ -260,7 +260,7 @@ void triggerNationalEvent(currentPlayer *player, currentPlayer players[], Square
             }
             if(count > 0){
                 Property *p = &squares[candidates[rand() % count]].data.property;
-                int repairCost = roundOff(p->baseValue * 0.2);
+                int repairCost = roundOff(p->baseValue * 0.1);
                 p->isDamaged = 1;
                 p->repairCost = repairCost;
                 printf("%s flood damaged. Repair Cost : LKR %d.\n\n", p->name, repairCost);

@@ -227,6 +227,7 @@ void startAuction(Square *square, currentPlayer players[]){
 void initStatus(currentStatus *status){
     status->rounds = 0;
     status->turn = 0;
+    status->currentNationalCardIndex = 0;
 }
 
 void incrementRound(currentStatus *status,currentPlayer players[],Square squares[]){
@@ -251,9 +252,7 @@ void incrementRound(currentStatus *status,currentPlayer players[],Square squares
         status->rounds++;
 
         checkInsuranceExpiry(players, squares);
-
-        
-        
+        updateNationalEvents(players);
 
         for (int i = 0; i < 4; i++) {
             checkLoanDefault(&players[i], squares);
@@ -363,7 +362,7 @@ void gameLoop(){
             prevRound = status.rounds;
 
             setLoanInterestRate(&econStatus);
-            rollAndMove(players,squares,&status,&econStatus);
+            rollAndMove(players,squares,&status,&econStatus,nationalEvents);
             
             incrementRound(&status,players,squares);
 

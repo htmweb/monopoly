@@ -256,7 +256,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
            
        }
 }
- void payRent(currentPlayer players[],currentPlayer *currentPlayer,Square *square,int playerIndex,Square squares[]){
+ void payRent(currentPlayer players[],currentPlayer *currentPlayer,Square *square,int playerIndex,Square squares[],EconomicState *econ){
        int rent = 0;
        int ownerID = -1;
        Player owner;
@@ -269,6 +269,29 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                 int hotels = square->data.property.numberOfHotels;
                 
                 owner = square->data.property.owner;
+                int ownerIndex = -1;
+                for(int i=0; i<4; i++){
+                    if(players[i].player == square->data.property.owner){
+                        ownerIndex = i;
+                    break;
+                    }
+                }
+
+                int tourismHyperCard = hasActiveNationalEvent(&players[ownerIndex], TOURISM_HYPE);
+                int festivalCard = hasActiveNationalEvent(&players[ownerIndex],FESTIVAL_SEASON);
+                int hotelRentFactor = 1;
+                if(tourismHyperCard == 1){
+                    hotelRentFactor += econ->hotelIncomeBoost;
+                    if(hotelRentFactor <=0){
+                        hotelRentFactor = 1;
+                    }
+                }
+                if(festivalCard == 1){
+                    hotelRentFactor += econ->hotelIncomeBoost;
+                    if(hotelRentFactor <=0){
+                        hotelRentFactor = 1;
+                    }
+                }
                 
                 for(int i=0; i<4; i++){
                         if(players[i].player == owner){
@@ -278,7 +301,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                     }
                 
                 if(hotels == 1){
-                    rent = 10*baseRent;
+                    rent = 10*baseRent*hotelRentFactor;
                 }
                 switch(houses){
                     case 0:
@@ -305,8 +328,23 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
             case RAILWAY:
                 if(square->data.railway.owner != players[playerIndex].player && square->data.railway.mortgageStatus == UNMORTGAGED && square->data.railway.owner != -1){
                     int baseRent = square->data.railway.baseRental;
+                    
                     owner = square->data.railway.owner;
-
+                    int rentFactor = 1;
+                    int ownerIndex = -1;
+                    for(int i=0; i<4; i++){
+                        if(players[i].player == square->data.property.owner){
+                            ownerIndex = i;
+                        break;
+                        }
+                    }
+                    int isCardActive = hasActiveNationalEvent(&players[ownerIndex], PORT_EXPANSION);
+                    if(isCardActive == 1){
+                        rentFactor = econ->railwayValueIncrement;
+                        if(rentFactor <=0){
+                            rentFactor = 1;
+                        }
+                    }
                     for(int i=0; i<4; i++){
                         if(players[i].player == owner){
                             ownerID = i;
@@ -328,6 +366,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                             rent = 2000;
                             break;
                     }
+                    rent = roundOff(rent*rentFactor);
                     payRentAndPrint(rent,square->data.railway.name,players,&players[ownerID],currentPlayer,squares,square);
                 }
                 break;
@@ -401,16 +440,19 @@ int getTotalPropertyValue(Square squares[], currentPlayer *current_player){
             case PROPERTY:
                 if(squares[i].data.property.owner == current_player->player && squares[i].data.property.mortgageStatus == UNMORTGAGED && squares[i].data.property.isLocked == NOT_LOAN_LOCKED){
                     value += squares[i].data.property.purchasePrice;
+                    printf("property: %s, %d\n", squares[i].data.property.name, squares[i].data.property.purchasePrice);
                 }
             break;
             case RAILWAY:
                 if(squares[i].data.railway.owner == current_player->player && squares[i].data.railway.mortgageStatus == UNMORTGAGED && squares[i].data.railway.isLocked == NOT_LOAN_LOCKED){
                     value += squares[i].data.railway.purchasePrice;
+                    printf("railway: %d\n", squares[i].data.railway.purchasePrice);
                 }
             break;
             case UTILITY:
                 if(squares[i].data.utility.owner == current_player->player && squares[i].data.utility.mortgageStatus == UNMORTGAGED && squares[i].data.utility.isLocked == NOT_LOAN_LOCKED){
                     value += squares[i].data.utility.purchasePrice;
+                    printf("utility: %d\n", squares[i].data.railway.purchasePrice);
                 }
             break;
         }
@@ -814,6 +856,9 @@ void handleConstruction(Square squares[], currentPlayer *player, EconomicState *
     if(squares[index].type == PROPERTY && squares[index].data.property.owner == player->player){
 
     int wantsToBuild = 0;
+    int inflationLow = 0;
+    int subsidyActive = 0;
+    
     switch (player->player) {
         case AGGRESSIVE_INVESTOR:
             wantsToBuild = 1;
@@ -829,8 +874,8 @@ void handleConstruction(Square squares[], currentPlayer *player, EconomicState *
 
         case OPPORTUNISTIC_TRADER: {
             
-            int inflationLow = (econ->currentInflationRate <= 0);
-            int subsidyActive = (player->activeNationalCardType == HOUSING_SUBSIDY);
+            inflationLow = (econ->currentInflationRate <= 0);
+            subsidyActive = hasActiveNationalEvent(player, HOUSING_SUBSIDY);
             wantsToBuild = (inflationLow || subsidyActive);
             break;
         }
@@ -840,9 +885,12 @@ void handleConstruction(Square squares[], currentPlayer *player, EconomicState *
         if (canBuildHotel(squares, player, index)){
             if (player->player == CONSERVATIVE_BANKER && player->ownedLoan.isActive == 0) {
                 buildHotel(squares, player, index);
-                return;
-            }else if(player->player != CONSERVATIVE_BANKER){
+            }else if(player->player != CONSERVATIVE_BANKER && player->player != OPPORTUNISTIC_TRADER){
                 buildHotel(squares, player, index);
+            }else{
+                if(inflationLow){
+                    buildHotel(squares, player, index);
+                }
             }
         }
 

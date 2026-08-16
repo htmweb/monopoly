@@ -691,7 +691,7 @@ int roundOff(double num){
 }
 
 
-void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status,EconomicState *econStatus){
+void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status,EconomicState *econStatus,NationalEvent nationalEvents[]){
     checkPlayerBankrupt(players,squares);
     for(int i = 0; i<4; i++){
         if(players[i].isBankrupt == NOTBANKRUPT && status->gameOver == NOT_GAME_OVER){
@@ -737,7 +737,11 @@ void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status
         
             int current_player_position = players[i].position;
 
-            payRent(players,&players[i],&squares[current_player_position],i,squares);
+            if(squares[tmp_pos].type == EVENT && squares[tmp_pos].data.event.type == NATIONAL_EVENT_CARD){
+                triggerNationalEvent(&players[i], players, squares, nationalEvents, econStatus, &(status->currentNationalCardIndex));
+            }
+
+            payRent(players,&players[i],&squares[current_player_position],i,squares,econStatus);
             buy(squares,&players[i],i,players);
             handleInsurancePurchase(squares,&players[i]);
             handleConstruction(squares,&players[i],econStatus);

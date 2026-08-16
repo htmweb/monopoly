@@ -280,13 +280,19 @@ typedef struct {
 typedef struct{
     int rounds;
     int turn;
+    int currentNationalCardIndex;
     isGameOver gameOver;
 }currentStatus;
 
 typedef struct {
     EconStatus econStatus;
     int currentInflationRate;  
-    int currentLoanInterestRate; 
+    int currentLoanInterestRate;
+    int utilityIncome;
+    int hotelIncomeBoost;
+    int constructionSuspended;
+    int railwayValueIncrement;
+    int insurancePremiumDiscount;
     economicEvents activeEconomicEvent;
 } EconomicState;
 
@@ -306,10 +312,10 @@ void gameLoop();
 void diceRoll(currentPlayer *player, Square squares[]);
 void setOrder(currentPlayer players[],Square squares[]);
 char* getPlayer(currentPlayer player);
-void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status,EconomicState *econStatus);
+void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status,EconomicState *econStatus,NationalEvent nationalEvents[]);
 
 int getMaxRent(Square squares[],currentPlayer *cPlayer);
-void payRent(currentPlayer players[],currentPlayer *currentPlayer,Square *square,int index,Square squares[]);
+void payRent(currentPlayer players[],currentPlayer *currentPlayer,Square *square,int index,Square squares[],EconomicState *econ);
 
 
 void buyProperty(Square squares[], currentPlayer *current_player,int player_index,currentPlayer players[]);
@@ -376,6 +382,10 @@ void printWinnerAndExit(currentPlayer *winner, Square squares[]);
 void initNationalEvents(NationalEvent nationalEvents[]);
 void initEconomicEvents(economicEvents econEvents[]);
 void triggerEconomicEvent(EconomicState *econ, Square squares[], economicEvents econEvents[]);
+
+void triggerNationalEvent(currentPlayer *player, currentPlayer players[], Square squares[], NationalEvent nationalEvents[], EconomicState *econ, int *cardIndex);
+void updateNationalEvents(currentPlayer players[]);
+int hasActiveNationalEvent(currentPlayer *player, activeNationalCardType type);
 
 void purchaseInsurance(Square squares[], currentPlayer *player, int propertyIndex, InsuranceType type);
 void checkInsuranceExpiry(currentPlayer players[], Square squares[]);

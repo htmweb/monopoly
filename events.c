@@ -326,7 +326,9 @@ void triggerNationalEvent(currentPlayer *player, currentPlayer players[], Square
         case TAX_AMNESTY:
             printf("Each player receives LKR 2,000.\n\n");
             for(int i = 0; i < 4; i++){
-                players[i].money += 2000;
+                if(players[i].isBankrupt == NOTBANKRUPT){
+                    players[i].money += 2000;
+                }
             }
             duration = 0;
             break;
@@ -396,9 +398,19 @@ void triggerNationalEvent(currentPlayer *player, currentPlayer players[], Square
             break;
 
         case GOVERNMENT_GRANT: {
-            int id = rand() % 4;
-            players[id].money += 5000;
-            printf("%s receives LKR 5,000.\n\n", getPlayer(players[id]));
+            int ids[4];
+            int count = 0;
+            for(int i = 0; i < 4; i++){
+                if(players[i].isBankrupt == NOTBANKRUPT){
+                    ids[count] = i;   // pack sequentially into ids[count], not ids[i]
+                    count++;
+                }
+            }
+            if(count > 0){
+                int id = ids[rand() % count];
+                players[id].money += 5000;
+                printf("%s receives LKR 5,000.\n\n", getPlayer(players[id]));
+            }
             duration = 0;
             break;
         }
@@ -426,7 +438,7 @@ void triggerNationalEvent(currentPlayer *player, currentPlayer players[], Square
 
     if(duration > 0){
         for(int i = 0; i < 20; i++){
-            if(player->activeNationalEvents[i].roundsRemaining <= 0){
+            if(player->activeNationalEvents[i].roundsRemaining <= 0 && player->isBankrupt == NOTBANKRUPT){
                 player->activeNationalEvents[i].type = card.type;
                 player->activeNationalEvents[i].roundsRemaining = duration;
                 break;
@@ -438,7 +450,7 @@ void triggerNationalEvent(currentPlayer *player, currentPlayer players[], Square
 void updateNationalEvents(currentPlayer players[]){
     for(int p = 0; p < 4; p++){
         for(int i = 0; i < 20; i++){
-            if(players[p].activeNationalEvents[i].roundsRemaining > 0){
+            if(players[p].activeNationalEvents[i].roundsRemaining > 0 && players[p].isBankrupt == NOTBANKRUPT){
                 players[p].activeNationalEvents[i].roundsRemaining--;
             }
         }
@@ -451,4 +463,194 @@ int hasActiveNationalEvent(currentPlayer *player, activeNationalCardType type){
         }
     }
     return 0;
+}
+
+void triggerDisaster(currentPlayer players[], Square squares[],DisasterType disasters[]){
+    
+    DisasterType disaster = disasters[rand() % 7];
+
+    int developedIndices[22];
+    int count = 0;
+
+    for(int i = 0; i < 40; i++){
+        if(squares[i].type == PROPERTY && (squares[i].data.property.numberOfHouses > 0 || squares[i].data.property.numberOfHotels > 0)){
+            developedIndices[count] = i;
+            count++;
+        }
+    }
+
+    if(count > 0){
+        int targetIndex = developedIndices[rand() % count];
+        Square *sq = &squares[targetIndex];
+        Property *property = &sq->data.property;
+
+        int repairCost = roundOff(sq->data.property.purchasePrice*0.1);
+        printf("Disaster\n");
+        switch(disaster){
+            case FIRE:
+                printf("\nFire occurred.\n");
+                break;
+            case FLOOD:              
+                printf("\nFlood occurred.\n");
+                break;
+            case RIOT:               
+                printf("\nRiot occurred.\n");
+                break;
+            case BUILDING_COLLAPSE:  
+                printf("\nBuilding Collapse occurred.\n");  
+                break;
+            case ELECTRICAL_FAILURE: 
+                printf("\nElectrical Failure occurred.\n"); 
+                break;
+            case EARTH_QUAKE:
+                printf("\nEarthquake occurred.\n");
+                break;
+            case VANDALISM:
+                printf("\nVandalism occurred.\n");
+            
+        }
+        printf("\nAffected Property :\n%s\n\n", property->name);
+
+        currentPlayer *owner = NULL;
+        for(int p = 0; p < 4; p++){
+            if(players[p].player == property->owner){
+                owner = &players[p];
+                break;
+            }
+        }
+
+        if(owner != NULL){
+
+            if(property->insuranceStatus == INSURED){
+                int id = property->insuranceId;
+                Insurance *policy = &owner->ownedInsurance[id];
+
+                int compensation = roundOff(repairCost * (policy->compensation / 100.0));;
+
+                int cantClaim = 0;
+
+                switch (policy->type){
+                    case BASIC_PROPERTY:
+                        if(disaster != FIRE && disaster != FLOOD){
+                            cantClaim = 1;
+                        }
+                    break;
+                    case COMPREHENSIVE:
+                        if(disaster != FIRE && disaster != FLOOD && disaster != RIOT && disaster != VANDALISM && disaster != EARTH_QUAKE){
+                            cantClaim = 1;
+                        }
+                    break;
+                    
+                }
+            
+                if(cantClaim == 1){
+                    property->isDamaged = 1;
+                    property->repairCost = repairCost;
+                    owner->financialLoss = INSURED_DISASTER_HAPPENED;
+                    printf("Property is damaged. Insurance cannot claim this type of disaster.\n");
+                    printf("Repair Cost : LKR %d.\n\n", repairCost);
+                }
+                else{
+                    owner->money += compensation;
+
+                    property->isDamaged = 0; 
+                    property->repairCost = 0;
+
+                    printf("Insurance Claim Approved.\n\n");
+                    printf("Compensation Paid :\nLKR %d.\n\n", compensation);
+                }
+
+                if(policy->type == BUSINESS_INTERRUPTION && property->numberOfHotels > 0){
+                    compensation = roundOff(repairCost * (policy->compensation / 100.0));
+                    int lostRent = property->baseRental * 5;
+                    owner->money += lostRent;
+                    printf("Business Interruption : Lost rental income for 5 rounds compensated.\n");
+                    printf("Lost Rent Paid :\nLKR %d.\n\n", lostRent);
+                }
+            }
+            else{
+                property->isDamaged = 1;
+                property->repairCost = repairCost;
+                owner->financialLoss = UNINSURED_DISASTER_HAPPENED;
+                printf("Property uninsured. Owner bears full repair cost of LKR %d.\n\n", repairCost);
+            }
+        }
+    }
+}
+
+
+void triggerGovernmentRegulation(EconomicState *econ, Square squares[], currentPlayer players[]){
+
+    GovernmentRegulationType regulation = rand() % 8;
+
+    econ->activeRegulation = regulation;
+    econ->regulationActive = 1;
+    econ->regulationRoundsRemaining = 20;
+
+    printf("\nGovernment Regulation\n\n");
+
+    switch(regulation){
+
+        case INCREASE_PROPERTY_TAX:
+            econ->incomeTaxMultiplier += 50;
+            printf("Increase Property Tax.\n\n");
+            printf("Income Tax increased by 50%%.\n\n");
+            break;
+
+        case REDUCE_LOAN_INTEREST:
+            econ->currentLoanInterestRate = roundOff(econ->currentLoanInterestRate*0.98);
+            printf("Reduce Loan Interest.\n\n");
+            printf("Interest decreased by 2%%.\n\n");
+            break;
+
+        case HOUSING_SUBSIDY_REGULATION:
+            for(int i = 0; i < 40; i++){
+                if(squares[i].type == PROPERTY){
+                    squares[i].data.property.houseConstructionCost = roundOff(squares[i].data.property.houseConstructionCost * 0.7);
+                }
+            }
+            printf("Housing Subsidy.\n\n");
+            printf("House construction costs reduced by 30%%.\n\n");
+            break;
+
+        case LUXURY_PROPERTY_TAX:
+            econ->luxuryPropertyTaxRate = 25;
+            printf("Luxury Property Tax.\n\n");
+            printf("Hotels incur an annual maintenance tax of 25%% of property value with developments.\n\n");
+            break;
+
+        case RAILWAY_MODERNIZATION:
+            for(int i = 0; i < 40; i++){
+                if(squares[i].type == RAILWAY){
+                    squares[i].data.railway.baseRental = roundOff(squares[i].data.railway.baseRental * 1.25);
+                }
+            }
+            printf("Railway Modernization.\n\n");
+            printf("Railway rents increased by 25%%.\n\n");
+            break;
+
+        case ELECTRICITY_TARIFF_REVISION:
+            econ->utilityRentMultiplier += 20;
+            printf("Electricity Tariff Revision.\n\n");
+            printf("Utility rent increased by 20%%.\n\n");
+            break;
+
+        case INSURANCE_REGULATION:
+            for(int i = 0; i < 40; i++){
+                if(squares[i].type == INSURANCE){
+                    squares[i].data.insurance.premium = roundOff(squares[i].data.insurance.premium * 0.85);
+                }
+            }
+            printf("Insurance Regulation.\n\n");
+            printf("Insurance premiums decreased by 15%%.\n");
+            printf("Coverage remains unchanged.\n\n");
+            break;
+
+        case ANTI_SPECULATION_ACT:
+            econ->maxUndevelopedProperties = 3;
+            printf("Anti-Speculation Act Introduced.\n\n");
+            printf("Players may own at most three undeveloped properties.\n");
+            printf("Additional purchases require immediate development within five rounds.\n\n");
+            break;
+    }
 }

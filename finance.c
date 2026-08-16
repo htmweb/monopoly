@@ -69,7 +69,7 @@ int getNetWorth(currentPlayer *player, Square squares[]) {
         }
     }
 
-    netWorth -= player->loanAmount; 
+    netWorth -= player->loanAmount;
 
     return netWorth;
 }
@@ -204,39 +204,59 @@ void obtainLoan(currentPlayer *player, Square squares[], int amount, EconomicSta
 
 }
 
-void repayLoan(currentPlayer *player, int amount) {
-    if (player->ownedLoan.isActive == 1){
-    if (amount > player->money){
-         amount = player->money;
-    }
-    if (amount > player->ownedLoan.loanAmount){
-         amount = player->ownedLoan.loanAmount;
-    }
+void repayLoan(currentPlayer *player, Square squares[], int amount) {
+    if (player->ownedLoan.isActive == 1) {
+        if (amount > player->money) {
+             amount = player->money;
+        }
+        if (amount > player->ownedLoan.loanAmount) {
+             amount = player->ownedLoan.loanAmount;
+        }
 
-    if(amount > 0){
-    player->money -= amount;
-    player->ownedLoan.loanAmount -= amount;
-    player->loanAmount = player->ownedLoan.loanAmount;
+        if (amount > 0) {
+            player->money -= amount;
+            player->ownedLoan.loanAmount -= amount;
+            player->loanAmount = player->ownedLoan.loanAmount;
 
-    printf("%s repaid LKR %d.\n", getPlayer(*player), amount);
-    printf("Outstanding Loan Balance : LKR %d.\n\n", player->ownedLoan.loanAmount);
+            printf("%s repaid LKR %d.\n", getPlayer(*player), amount);
+            printf("Outstanding Loan Balance : LKR %d.\n\n", player->ownedLoan.loanAmount);
 
-    if (player->ownedLoan.loanAmount == 0) {
-        player->ownedLoan.isActive = 0;
-        player->isLoanActive = 0;
-        player->ownedLoan.collateralCount = 0;
-        printf("%s has fully repaid the loan. Collateral released.\n\n", getPlayer(*player));
+            if (player->ownedLoan.loanAmount == 0) {
+                for (int i = 0; i < player->ownedLoan.collateralCount; i++) {
+                    int squareIndex = player->ownedLoan.collateralIndices[i];
+                    Square *sq = &squares[squareIndex];
+
+                    switch (sq->type) {
+                        case PROPERTY:
+                            sq->data.property.mortgageStatus = UNMORTGAGED;
+                            sq->data.property.isLocked = NOT_LOAN_LOCKED;
+                            break;
+                        case RAILWAY:
+                            sq->data.railway.mortgageStatus = UNMORTGAGED;
+                            sq->data.railway.isLocked = NOT_LOAN_LOCKED;
+                            break;
+                        case UTILITY:
+                            sq->data.utility.mortgageStatus = UNMORTGAGED;
+                            sq->data.utility.isLocked = NOT_LOAN_LOCKED;
+                            break;
+                    }
+                }
+
+                player->ownedLoan.isActive = 0;
+                player->isLoanActive = 0;
+                player->ownedLoan.collateralCount = 0;
+                
+                printf("%s has fully repaid the loan. Collateral released.\n\n", getPlayer(*player));
+            } else {
+                extendLoan(player);
+            }
+        }
     }
-    else{
-        extendLoan(player);
-    }
-  }
-  }
 }
 
-void repayLoanFull(currentPlayer *player) {
+void repayLoanFull(currentPlayer *player,Square squares[]) {
     if(player->money >= player->ownedLoan.loanAmount){
-        repayLoan(player, player->ownedLoan.loanAmount);
+        repayLoan(player, squares,player->ownedLoan.loanAmount);
     }
 }
 
@@ -271,6 +291,7 @@ void checkLoanDefault(currentPlayer *player, Square squares[]) {
                 sq->data.property.numberOfHotels = 0;
                 sq->data.property.insuranceStatus = UNINSURED;
                 sq->data.property.mortgageStatus = UNMORTGAGED;
+                sq->data.property.isLocked = NOT_LOAN_LOCKED;
 
                 player->propertiesCount--;
                 player->numberOfHouses -= lostHouses;
@@ -280,11 +301,13 @@ void checkLoanDefault(currentPlayer *player, Square squares[]) {
             case RAILWAY:
                 sq->data.railway.owner = -1;
                 sq->data.railway.mortgageStatus = UNMORTGAGED;
+                sq->data.railway.isLocked = NOT_LOAN_LOCKED;
                 player->railwaysCount--;
                 break;
             case UTILITY:
                 sq->data.utility.owner = -1;
                 sq->data.utility.mortgageStatus = UNMORTGAGED;
+                sq->data.utility.isLocked = NOT_LOAN_LOCKED;
                 player->utilityCount--;
                 break;
         }
@@ -304,7 +327,7 @@ void checkLoanDefault(currentPlayer *player, Square squares[]) {
 int isLoanNeeded(currentPlayer *player, Square squares[], EconomicState *econStatus) {
     switch (player->player) {
         case AGGRESSIVE_INVESTOR:
-            printf("max loan amount : %d\n", getMaxLoanAmount(player, squares));
+            printf("Max loan amount : %d\n", getMaxLoanAmount(player, squares));
             
             if((getMaxLoanAmount(player, squares) >= squares[3].data.property.houseConstructionCost)){
                 return 1;
@@ -312,7 +335,7 @@ int isLoanNeeded(currentPlayer *player, Square squares[], EconomicState *econSta
         break;
 
         case CONSERVATIVE_BANKER:
-            if(player->money < getMaxRent(squares,player) && getMaxRent(squares,player) > player->money){
+            if(player->money <= getMaxRent(squares,player)){
                 return 1;
             }
         break;
@@ -431,6 +454,7 @@ void raiseCashByMortgaging(currentPlayer *player, Square squares[], int neededAm
                 if (sq->data.property.owner == player->player &&
                     sq->data.property.mortgageStatus == UNMORTGAGED &&
                     sq->data.property.isLocked == NOT_LOAN_LOCKED) {
+                    
                     items[count].index = i;
                     items[count].value = sq->data.property.mortgageValue;
                     count++;
@@ -472,15 +496,25 @@ void raiseCashByMortgaging(currentPlayer *player, Square squares[], int neededAm
         Square *sq = &squares[items[i].index];
         switch (sq->type) {
             case PROPERTY:
-                 sq->data.property.mortgageStatus = MORTGAGED;
-                 sq->data.property.owner = -1;
-                 break;
+                player->numberOfHouses -= sq->data.property.numberOfHouses;
+                player->numberOfHotels -= sq->data.property.numberOfHotels;
+                sq->data.property.numberOfHouses = 0;
+                sq->data.property.numberOfHotels = 0;
+                sq->data.property.insuranceStatus = UNINSURED;
+                sq->data.property.mortgageStatus = UNMORTGAGED;
+                sq->data.property.owner = -1;
+                player->propertiesCount--;
+                break;
             case RAILWAY:
-                 sq->data.railway.mortgageStatus  = MORTGAGED;
-                 break;
+                sq->data.railway.mortgageStatus  = UNMORTGAGED;
+                sq->data.railway.owner = -1;
+                player->railwaysCount--;
+                break;
             case UTILITY: 
-                 sq->data.utility.mortgageStatus  = MORTGAGED;
-                 break;
+                sq->data.utility.mortgageStatus  = UNMORTGAGED;
+                sq->data.utility.owner = -1;
+                player->utilityCount--;
+                break;
         }
         player->money += items[i].value;
         raised += items[i].value;
@@ -539,18 +573,21 @@ void bankRupt(currentPlayer *player, Square squares[]) {
                     sq->data.property.numberOfHotels = 0;
                     sq->data.property.insuranceStatus = UNINSURED;
                     sq->data.property.mortgageStatus = UNMORTGAGED;
+                    sq->data.property.isLocked = NOT_LOAN_LOCKED;
                     sq->data.property.owner = -1;
                 }
                 break;
             case RAILWAY:
                 if (sq->data.railway.owner == player->player) {
                     sq->data.railway.mortgageStatus = UNMORTGAGED;
+                    sq->data.railway.isLocked = NOT_LOAN_LOCKED;
                     sq->data.railway.owner = -1;
                 }
                 break;
             case UTILITY:
                 if (sq->data.utility.owner == player->player) {
                     sq->data.utility.mortgageStatus = UNMORTGAGED;
+                    sq->data.utility.isLocked = NOT_LOAN_LOCKED;
                     sq->data.utility.owner = -1;
                 }
                 break;
@@ -678,118 +715,6 @@ void checkInsuranceExpiry(currentPlayer players[], Square squares[]){
   }
 }
 
-void triggerDisaster(currentPlayer players[], Square squares[],DisasterType disasters[]){
-    
-    DisasterType disaster = disasters[rand() % 7];
-
-    int developedIndices[22];
-    int count = 0;
-
-    for(int i = 0; i < 40; i++){
-        if(squares[i].type == PROPERTY && (squares[i].data.property.numberOfHouses > 0 || squares[i].data.property.numberOfHotels > 0)){
-            developedIndices[count] = i;
-            count++;
-        }
-    }
-
-    if(count > 0){
-        int targetIndex = developedIndices[rand() % count];
-        Square *sq = &squares[targetIndex];
-        Property *property = &sq->data.property;
-
-        int repairCost = roundOff(sq->data.property.purchasePrice*0.1);
-        printf("Disaster\n");
-        switch(disaster){
-            case FIRE:
-                printf("\nFire occurred.\n");
-                break;
-            case FLOOD:              
-                printf("\nFlood occurred.\n");
-                break;
-            case RIOT:               
-                printf("\nRiot occurred.\n");
-                break;
-            case BUILDING_COLLAPSE:  
-                printf("\nBuilding Collapse occurred.\n");  
-                break;
-            case ELECTRICAL_FAILURE: 
-                printf("\nElectrical Failure occurred.\n"); 
-                break;
-            case EARTH_QUAKE:
-                printf("\nEarthquake occurred.\n");
-                break;
-            case VANDALISM:
-                printf("\nVandalism occurred.\n");
-            
-        }
-        printf("\nAffected Property :\n%s\n\n", property->name);
-
-        currentPlayer *owner = NULL;
-        for(int p = 0; p < 4; p++){
-            if(players[p].player == property->owner){
-                owner = &players[p];
-                break;
-            }
-        }
-
-        if(owner != NULL){
-
-            if(property->insuranceStatus == INSURED){
-                int id = property->insuranceId;
-                Insurance *policy = &owner->ownedInsurance[id];
-
-                int compensation = roundOff(repairCost * (policy->compensation / 100.0));;
-
-                int cantClaim = 0;
-
-                switch (policy->type){
-                    case BASIC_PROPERTY:
-                        if(disaster != FIRE && disaster != FLOOD){
-                            cantClaim = 1;
-                        }
-                    break;
-                    case COMPREHENSIVE:
-                        if(disaster != FIRE && disaster != FLOOD && disaster != RIOT && disaster != VANDALISM && disaster != EARTH_QUAKE){
-                            cantClaim = 1;
-                        }
-                    break;
-                    
-                }
-            
-                if(cantClaim == 1){
-                    property->isDamaged = 1;
-                    property->repairCost = repairCost;
-                    owner->financialLoss = INSURED_DISASTER_HAPPENED;
-                    printf("Property is damaged. Insurance cannot claim this type of disaster.\n");
-                    printf("Repair Cost : LKR %d.\n\n", repairCost);
-                }
-                else{
-                    owner->money += compensation;
-
-                    property->isDamaged = 0; 
-                    property->repairCost = 0;
-
-                    printf("Insurance Claim Approved.\n\n");
-                    printf("Compensation Paid :\nLKR %d.\n\n", compensation);
-                }
-
-                if(policy->type == BUSINESS_INTERRUPTION && property->numberOfHotels > 0){
-                    compensation = roundOff(repairCost * (policy->compensation / 100.0));
-                    int lostRent = property->baseRental * 5;
-                    owner->money += lostRent;
-                    printf("Business Interruption : Lost rental income for 5 rounds compensated.\n");
-                    printf("Lost Rent Paid :\nLKR %d.\n\n", lostRent);
-                }
-            }
-            else{
-                property->isDamaged = 1;
-                property->repairCost = repairCost;
-                owner->financialLoss = UNINSURED_DISASTER_HAPPENED;
-                printf("Property uninsured. Owner bears full repair cost of LKR %d.\n\n", repairCost);
-            }
-        }
-    }
-}
 
 void repairDamagedProperties(currentPlayer players[], Square squares[]){
     for(int p = 0; p < 4; p++){
@@ -866,3 +791,62 @@ void handleInsurancePurchase(Square squares[], currentPlayer *player){
         }
     }
 }
+
+void handleTax(Square *square, currentPlayer *player, Square squares[], EconomicState *econ){
+    if(square->type == TAX){
+        int taxAmount = roundOff(getNetWorth(player, squares)*0.15);
+
+        if(econ->incomeTaxMultiplier > 0){
+            taxAmount = roundOff(taxAmount * (1 + (econ->incomeTaxMultiplier / 100.0)));
+        }
+        printf("\n%s landed on Income Tax.\n\n", getPlayer(*player));
+
+        if(player->money >= taxAmount){
+            player->money -= taxAmount;
+
+            printf("Income Tax Paid : LKR %d.\n", taxAmount);
+            printf("Current Balance : LKR %d.\n\n", player->money);
+        }
+        else{
+            printf("Income Tax Due : LKR %d.\n\n", taxAmount);
+            collectDebt(player, NULL, squares, taxAmount);
+        }
+
+        checkBankrupt(player, squares);
+    }
+}
+
+void applyLuxuryPropertyTax(currentPlayer players[], Square squares[], EconomicState *econ){
+    if(econ->luxuryPropertyTaxRate > 0){
+        for(int i = 0; i < 40; i++){
+            if(squares[i].type == PROPERTY && squares[i].data.property.numberOfHotels == 1){
+                Property *property = &squares[i].data.property;
+
+                int ownerIndex = -1;
+                for(int p = 0; p < 4; p++){
+                    if(players[p].player == property->owner){
+                        ownerIndex = p;
+                        break;
+                    }
+                }
+
+                if(ownerIndex != -1){
+                    int tax = roundOff(property->purchasePrice * (econ->luxuryPropertyTaxRate / 100.0));
+
+                    printf("\nLuxury Property Tax\n\n");
+                    printf("%s owes LKR %d on %s.\n", getPlayer(players[ownerIndex]), tax, property->name);
+
+                    if(players[ownerIndex].money >= tax){
+                        players[ownerIndex].money -= tax;
+                        printf("Tax Paid : LKR %d.\n", tax);
+                    }else{
+                        collectDebt(&players[ownerIndex], NULL, squares, tax);
+                    }
+
+                    checkBankrupt(&players[ownerIndex], squares);
+                }
+            }
+        }
+    }
+}
+

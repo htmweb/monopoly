@@ -228,14 +228,15 @@ void initStatus(currentStatus *status){
     status->rounds = 0;
     status->turn = 0;
     status->currentNationalCardIndex = 0;
+    status->gameOver = NOT_GAME_OVER;
 }
 
-void incrementRound(currentStatus *status,currentPlayer players[],Square squares[]){
+void incrementRound(currentStatus *status,currentPlayer players[],Square squares[],EconomicState *econStatus){
     int offset = 0;
     int minRounds = 1;
     checkPlayerBankrupt(players,squares);
 
-    for(int i=0; i<=4; i++){
+    for(int i=0; i<4; i++){
         if(players[i].inJail == NOTIN_JAIL && players[i].isBankrupt == NOTBANKRUPT){
             minRounds = players[i].currentRound;
             offset = i;
@@ -258,7 +259,7 @@ void incrementRound(currentStatus *status,currentPlayer players[],Square squares
             checkLoanDefault(&players[i], squares);
             calLoanInterest(&players[i],squares);
         }
-
+        applyLuxuryPropertyTax(players, squares, econStatus);
         
         printf("==================================\n");
         printf("Round %d Summary\n", status->rounds);
@@ -294,23 +295,26 @@ void printWinnerAndExit(currentPlayer *winner,Square squares[]){
     exit(0);
 }
 
-void checkWinner(currentPlayer players[],currentStatus *status,Square squares[]){
+void checkWinner(currentPlayer players[], currentStatus *status, Square squares[]){
     int losers = 0;
-    
-    for(int i=0; i<4; i++){
+    int lastActive = -1;
+
+    for(int i = 0; i < 4; i++){
         if(players[i].isBankrupt == BANKRUPT){
             losers++;
-        }
-    }
-    if(losers == 3){
-        for(int i=0; i<4; i++){
-            if(players[i].isBankrupt == NOTBANKRUPT){
-                status->gameOver = GAME_OVER;                
-                printWinnerAndExit(&players[i],squares);
-            }
+        } else {
+            lastActive = i;
         }
     }
 
+    if(losers >= 3){
+        status->gameOver = GAME_OVER;
+        if(lastActive != -1){
+            printWinnerAndExit(&players[lastActive], squares);
+        } else {
+            gameDraw(players, squares, status);
+        }
+    }
 }
 void gameDraw(currentPlayer players[],Square squares[],currentStatus *status){
     int netWorth = getNetWorth(&players[0], squares);
@@ -327,7 +331,21 @@ void gameDraw(currentPlayer players[],Square squares[],currentStatus *status){
 
     printWinnerAndExit(winner,squares);
 }
+void initEconStatus(EconomicState *econStatus){
+    econStatus->utilityRentMultiplier = 1;
+    econStatus->currentInflationRate = 10;
+    econStatus->currentLoanInterestRate = 10;
+    econStatus->regulationActive = 0;
+    econStatus->insurancePremiumDiscount = 0;
+    econStatus->constructionSuspended = 0;
+    econStatus->railwayValueIncrement = 0;
+    econStatus->incomeTaxMultiplier = 1;
+    econStatus->luxuryPropertyTaxRate = 0;
+    econStatus->utilityIncome = 0;
+    econStatus->maxUndevelopedProperties = -1;
+}
 void gameLoop(){
+    srand(1);
     Square squares[40];
     currentPlayer players[4];
     currentStatus status;
@@ -339,6 +357,7 @@ void gameLoop(){
     status.gameOver = NOT_GAME_OVER;
 
     initStatus(&status);
+    initEconStatus(&econStatus);
     initNationalEvents(nationalEvents);
     initEconomicEvents(econEvents);
     initBoard(squares,players);
@@ -359,12 +378,15 @@ void gameLoop(){
                 applyInflation(squares,&econStatus, generateInflationRate());
                 triggerDisaster(players,squares,disasters);
             }
+            if(prevRound != status.rounds && status.rounds % 20 == 0){
+                triggerGovernmentRegulation(&econStatus,squares,players); 
+            }
             prevRound = status.rounds;
 
             setLoanInterestRate(&econStatus);
             rollAndMove(players,squares,&status,&econStatus,nationalEvents);
             
-            incrementRound(&status,players,squares);
+            incrementRound(&status,players,squares,&econStatus);
 
             if(prevRound != status.rounds && status.rounds % 10 == 0){
                 printMarketCondition(&econStatus);

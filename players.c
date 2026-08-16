@@ -6,8 +6,6 @@
 const int BID_VAL = 250;
 
 void initPlayers(Square squares[40],currentPlayer players[4]){
-    srand(1);
-
     players[0] = (currentPlayer){
         .player = AGGRESSIVE_INVESTOR,
         .ownedInsurance = {},
@@ -162,7 +160,18 @@ void AGG_BIDDING(Auction *auction, currentPlayer *player,int player_index){
             printf("%s withdraws.\n", getPlayer(*player));
         }
     }
-    
+    else if(auction->square.type == PROPERTY && auction->square.data.property.owner == -1 && auction->square.data.property.mortgageStatus == UNMORTGAGED && (auction->square.data.property.groupID = 6 || auction->square.data.property.groupID == 8)){
+        if((auction->currentBid)+BID_VAL <= player->money){
+            auction->AGGRESSIVE_INVESTOR_BID = auction->currentBid + BID_VAL;
+            auction->currentBid = auction->currentBid + BID_VAL;
+            auction->lastBidder = AGGRESSIVE_INVESTOR;
+            printf("%s bids LKR %d.\n\n", getPlayer(*player), auction->AGGRESSIVE_INVESTOR_BID);
+        }
+        else{
+            auction->AGGRESSIVE_INVESTOR_BID = -1;
+            printf("%s withdraws.\n", getPlayer(*player));
+        }
+    }
     else{
         auction->AGGRESSIVE_INVESTOR_BID = -1;
     }
@@ -390,7 +399,9 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
                         else{
                             rent = 10*currentPlayer->lastDieVal;
                         }
-                       
+                        if(econ->utilityRentMultiplier > 0){
+                            rent = roundOff(rent*(1 + (econ->utilityRentMultiplier/100.0))); 
+                        } 
                         payRentAndPrint(rent,square->data.utility.name,players,&players[ownerID],currentPlayer,squares,square);
                         
                     }
@@ -399,7 +410,7 @@ void payRentAndPrint(int rent,char name[],currentPlayer players[],currentPlayer 
        }
        
    }
-//
+
 int getMaxRent(Square squares[],currentPlayer *cPlayer) {
     int maxRent = 0;
     for (int i = 0; i < 40; i++) {
@@ -438,21 +449,18 @@ int getTotalPropertyValue(Square squares[], currentPlayer *current_player){
     for(int i=0; i<40; i++){
         switch(squares[i].type){
             case PROPERTY:
-                if(squares[i].data.property.owner == current_player->player && squares[i].data.property.mortgageStatus == UNMORTGAGED && squares[i].data.property.isLocked == NOT_LOAN_LOCKED){
+                if(squares[i].data.property.owner == current_player->player){
                     value += squares[i].data.property.purchasePrice;
-                    printf("property: %s, %d\n", squares[i].data.property.name, squares[i].data.property.purchasePrice);
                 }
             break;
             case RAILWAY:
-                if(squares[i].data.railway.owner == current_player->player && squares[i].data.railway.mortgageStatus == UNMORTGAGED && squares[i].data.railway.isLocked == NOT_LOAN_LOCKED){
+                if(squares[i].data.railway.owner == current_player->player){
                     value += squares[i].data.railway.purchasePrice;
-                    printf("railway: %d\n", squares[i].data.railway.purchasePrice);
                 }
             break;
             case UTILITY:
-                if(squares[i].data.utility.owner == current_player->player && squares[i].data.utility.mortgageStatus == UNMORTGAGED && squares[i].data.utility.isLocked == NOT_LOAN_LOCKED){
+                if(squares[i].data.utility.owner == current_player->player){
                     value += squares[i].data.utility.purchasePrice;
-                    printf("utility: %d\n", squares[i].data.railway.purchasePrice);
                 }
             break;
         }
@@ -467,19 +475,20 @@ void buyProperty(Square squares[], currentPlayer *current_player,int player_inde
             if(squares[current_pos].data.property.mortgageStatus == UNMORTGAGED){
                 if(squares[current_pos].data.property.owner == -1){
                     int remain = current_player->money - squares[current_pos].data.property.purchasePrice;
-                    int maxRent = getMaxRent(squares,current_player);
-                    if(remain >= maxRent){
+                    int oneRentBuffer = squares[current_pos].data.property.baseRental;
+                    if(remain >= oneRentBuffer){
                         squares[current_pos].data.property.owner = AGGRESSIVE_INVESTOR;
                         current_player->money -= squares[current_pos].data.property.purchasePrice;
                         current_player->propertiesCount++;
                         printf("%s purchases %s for LKR %d.\n", getPlayer(*current_player), squares[current_pos].data.property.name, squares[current_pos].data.property.purchasePrice);
                         printf("Remaining Balance : LKR %d.\n\n", current_player->money);
                     }
-                    else{
-                        startAuction(&squares[current_pos], players);
-                    }
                 }
-            }
+        else{
+            startAuction(&squares[current_pos], players);
+        }
+    
+    }
         break;
 
         case CONSERVATIVE_BANKER:
@@ -521,7 +530,25 @@ void buyProperty(Square squares[], currentPlayer *current_player,int player_inde
             }
         break;
         case OPPORTUNISTIC_TRADER:
-            //to be continued
+            if(squares[current_pos].data.property.mortgageStatus == UNMORTGAGED){
+                if(squares[current_pos].data.property.owner == -1){
+                    if(squares[current_pos].data.property.baseRental > squares[current_pos].data.property.houseConstructionCost){
+                    
+                        int remain = current_player->money - squares[current_pos].data.property.purchasePrice;
+
+                        if(remain >= 0){
+                            squares[current_pos].data.property.owner = OPPORTUNISTIC_TRADER;
+                            current_player->money -= squares[current_pos].data.property.purchasePrice;
+                            current_player->propertiesCount++;
+                            printf("%s purchases %s for LKR %d.\n", getPlayer(*current_player), squares[current_pos].data.property.name, squares[current_pos].data.property.purchasePrice);
+                            printf("Remaining Balance : LKR %d.\n\n", current_player->money);
+                        }
+                        else{
+                            startAuction(&squares[current_pos], players);
+                        }
+                    }
+                }
+            }
         break;
     }
 }
@@ -533,16 +560,21 @@ void buyRailway(Square squares[], currentPlayer *current_player,int player_index
             if(squares[current_pos].data.railway.mortgageStatus == UNMORTGAGED){
                 if(squares[current_pos].data.railway.owner == -1){
                     int remain = current_player->money - squares[current_pos].data.railway.purchasePrice;
-                    int maxRentSqID = -1;
-                    int maxRent = 0;
-
-                    for(int i=0; i<4; i++){
-                        if(squares[i].type == PROPERTY && squares[i].data.property.owner != -1 && squares[i].data.property.mortgageStatus == UNMORTGAGED && squares[i].data.property.owner!=player_index){
-                            if(squares[i].data.property.baseRental > maxRent){
-                            maxRent = squares[i].data.property.baseRental;
-                            maxRentSqID = i;
-                            }
-                        }
+                    int ownedRailways = players[player_index].railwaysCount;
+                    int maxRent = 250;
+                    switch(ownedRailways){
+                        case 1:
+                            maxRent = 250;
+                            break;
+                        case 2:
+                            maxRent = 500;
+                            break;
+                        case 3:
+                            maxRent = 1000;
+                            break;
+                        case 4:
+                            maxRent = 2000;
+                            break;
                     }
 
                     if(remain >= maxRent){
@@ -598,7 +630,23 @@ void buyRailway(Square squares[], currentPlayer *current_player,int player_index
             }
         break;
         case OPPORTUNISTIC_TRADER:
-            //to be continued
+            if(squares[current_pos].data.railway.mortgageStatus == UNMORTGAGED){
+                if(squares[current_pos].data.railway.owner == -1){
+                    int remain = current_player->money - squares[current_pos].data.railway.purchasePrice;
+
+                    if(remain >= 0 && current_player->railwaysCount == 0){
+                        squares[current_pos].data.railway.owner = OPPORTUNISTIC_TRADER;
+                        current_player->money -= squares[current_pos].data.railway.purchasePrice;
+                        current_player->railwaysCount++;
+                        printf("%s purchases %s for LKR %d.\n", getPlayer(*current_player), squares[current_pos].data.railway.name, squares[current_pos].data.railway.purchasePrice);
+                        printf("Remaining Balance : LKR %d.\n\n", current_player->money);
+                    }
+                    else{
+                        startAuction(&squares[current_pos], players);
+                    }
+                }
+            }
+        
         break;
     }
 }
@@ -613,7 +661,7 @@ void buyUtility(Square squares[], currentPlayer *current_player,int player_index
                     int maxRentSqID = -1;
                     int maxRent = 0;
 
-                    for(int i=0; i<4; i++){
+                    for(int i=0; i<40; i++){
                         if(squares[i].type == PROPERTY && squares[i].data.property.owner != -1 && squares[i].data.property.mortgageStatus == UNMORTGAGED && squares[i].data.property.owner!=player_index){
                             if(squares[i].data.property.baseRental > maxRent){
                             maxRent = squares[i].data.property.baseRental;
@@ -661,7 +709,7 @@ void buyUtility(Square squares[], currentPlayer *current_player,int player_index
                 if(squares[current_pos].data.utility.owner == -1){
                     int remain = current_player->money - squares[current_pos].data.utility.purchasePrice;
 
-                    if(remain >= 0){
+                    if(remain >= 0 && current_player->utilityCount == 0){
                         squares[current_pos].data.utility.owner = RISK_TAKER;
                         current_player->money -= squares[current_pos].data.utility.purchasePrice;
                         current_player->utilityCount++;
@@ -675,7 +723,22 @@ void buyUtility(Square squares[], currentPlayer *current_player,int player_index
             }
         break;
         case OPPORTUNISTIC_TRADER:
-            //to be continued
+            if(squares[current_pos].data.utility.mortgageStatus == UNMORTGAGED){
+                if(squares[current_pos].data.utility.owner == -1){
+                    int remain = current_player->money - squares[current_pos].data.utility.purchasePrice;
+
+                    if(remain >= 0){
+                        squares[current_pos].data.utility.owner = OPPORTUNISTIC_TRADER;
+                        current_player->money -= squares[current_pos].data.utility.purchasePrice;
+                        current_player->utilityCount++;
+                        printf("%s purchases %s for LKR %d.\n", getPlayer(*current_player), squares[current_pos].data.utility.name, squares[current_pos].data.utility.purchasePrice);
+                        printf("Remaining Balance : LKR %d.\n\n", current_player->money);
+                    }
+                    else{
+                        startAuction(&squares[current_pos], players);
+                    }
+                }
+            }
         break;
     }
 }
@@ -743,16 +806,16 @@ void handleBank(Square squares[],Square *square, currentPlayer *cPlayer,currentS
             if(repayAmount != 0){
                 switch(cPlayer->player){
                     case AGGRESSIVE_INVESTOR:
-                        repayLoan(cPlayer,repayAmount);
+                        repayLoan(cPlayer,squares,repayAmount);
                         break;
                     case CONSERVATIVE_BANKER:
-                        repayLoan(cPlayer,repayAmount);
+                        repayLoan(cPlayer,squares,repayAmount);
                         break;
                     case RISK_TAKER:
-                        repayLoan(cPlayer,repayAmount);
+                        repayLoan(cPlayer,squares,repayAmount);
                         break;
                     case OPPORTUNISTIC_TRADER:
-                        repayLoan(cPlayer,repayAmount);
+                        repayLoan(cPlayer,squares,repayAmount);
                         break;
                 }
             }

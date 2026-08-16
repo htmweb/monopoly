@@ -61,11 +61,7 @@ void initBoard(Square squares[],currentPlayer players[]){
  
     squares[4] = (Square){
         .type = TAX,
-        .data = {
-            .tax = {
-                .amount = 200
-            }
-        }
+        
     };
  
     squares[5] = (Square){
@@ -741,6 +737,7 @@ void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status
                 triggerNationalEvent(&players[i], players, squares, nationalEvents, econStatus, &(status->currentNationalCardIndex));
             }
 
+            handleTax(&squares[tmp_pos], &players[i], squares, econStatus);
             payRent(players,&players[i],&squares[current_player_position],i,squares,econStatus);
             buy(squares,&players[i],i,players);
             handleInsurancePurchase(squares,&players[i]);

@@ -126,6 +126,17 @@ typedef enum{
     INSURED_DISASTER_HAPPENED
 }FinancialLoss;
 
+typedef enum{
+    INCREASE_PROPERTY_TAX,
+    REDUCE_LOAN_INTEREST,
+    HOUSING_SUBSIDY_REGULATION,
+    LUXURY_PROPERTY_TAX,
+    RAILWAY_MODERNIZATION,
+    ELECTRICITY_TARIFF_REVISION,
+    INSURANCE_REGULATION,
+    ANTI_SPECULATION_ACT
+}GovernmentRegulationType;
+
 typedef struct{
     Player player;
     int diceVal;
@@ -285,7 +296,6 @@ typedef struct{
 }currentStatus;
 
 typedef struct {
-    EconStatus econStatus;
     int currentInflationRate;  
     int currentLoanInterestRate;
     int utilityIncome;
@@ -293,6 +303,14 @@ typedef struct {
     int constructionSuspended;
     int railwayValueIncrement;
     int insurancePremiumDiscount;
+    int regulationActive;                        
+    int regulationRoundsRemaining;               
+    int incomeTaxMultiplier;                    
+    int luxuryPropertyTaxRate;                    
+    int utilityRentMultiplier;                
+    int maxUndevelopedProperties;
+    EconStatus econStatus; 
+    GovernmentRegulationType activeRegulation;
     economicEvents activeEconomicEvent;
 } EconomicState;
 
@@ -313,6 +331,7 @@ void diceRoll(currentPlayer *player, Square squares[]);
 void setOrder(currentPlayer players[],Square squares[]);
 char* getPlayer(currentPlayer player);
 void rollAndMove(currentPlayer players[], Square squares[],currentStatus *status,EconomicState *econStatus,NationalEvent nationalEvents[]);
+void incrementRound(currentStatus *status,currentPlayer players[],Square squares[],EconomicState *econStatus);
 
 int getMaxRent(Square squares[],currentPlayer *cPlayer);
 void payRent(currentPlayer players[],currentPlayer *currentPlayer,Square *square,int index,Square squares[],EconomicState *econ);
@@ -348,8 +367,8 @@ int getOwnedItems(Square squares[], currentPlayer *current_player);
 void setLoanInterestRate(EconomicState *econ);
 int isLoanNeeded(currentPlayer *player, Square squares[], EconomicState *econStatus);
 void obtainLoan(currentPlayer *player, Square squares[], int amount, EconomicState *econ);
-void repayLoan(currentPlayer *player, int amount);
-void repayLoanFull(currentPlayer *player);
+void repayLoan(currentPlayer *player,Square squares[],int amount);
+void repayLoanFull(currentPlayer *player,Square squares[]);
 void calLoanInterest(currentPlayer *player,Square squares[]);
 void checkLoanDefault(currentPlayer *player, Square squares[]);
 int wantToRepay(Square squares[], currentPlayer *player, EconomicState *econ);
@@ -394,4 +413,8 @@ void repairDamagedProperties(currentPlayer players[], Square squares[]);
 int decideInsuranceType(currentPlayer *player, Square squares[], int propertyIndex);
 void handleInsurancePurchase(Square squares[], currentPlayer *player);
 
+
+void handleTax(Square *square, currentPlayer *player, Square squares[], EconomicState *econ);
+void applyLuxuryPropertyTax(currentPlayer players[], Square squares[], EconomicState *econ);
+void triggerGovernmentRegulation(EconomicState *econ, Square squares[], currentPlayer players[]);
 #endif

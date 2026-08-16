@@ -346,7 +346,7 @@ void initEconStatus(EconomicState *econStatus){
     econStatus->maxUndevelopedProperties = -1;
 }
 void gameLoop(){
-    srand(1);
+    srand(1000);
     Square squares[40];
     currentPlayer players[4];
     currentStatus status;
